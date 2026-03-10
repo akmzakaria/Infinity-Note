@@ -1,0 +1,19 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="96" fill="#0c1327"/>
+  <path
+    d="M128 256C128 222.0081 155.008 195 189 195C219 195 240 227 256 256C272 285 293 317 323 317C356.992 317 384 289.992 384 256"
+    stroke="#38bdf8"
+    strokeWidth="40"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    fill="none"
+  />
+  <path
+    d="M384 256C384 289.992 356.992 317 323 317C293 317 272 285 256 256C240 227 219 195 189 195C155.008 195 128 222.008 128 256"
+    stroke="#38bdf8"
+    strokeWidth="40"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    fill="none"
+  />
+</svg>

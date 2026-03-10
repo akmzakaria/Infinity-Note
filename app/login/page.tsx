@@ -29,7 +29,7 @@ export default function LoginPage() {
         title: 'Welcome!',
         description: 'Successfully signed in with Google.',
       })
-      router.push('/')
+      router.push('/?category=All')
     } catch (error) {
       console.error('Sign in error:', error)
       showToast({
@@ -85,7 +85,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full rounded-md border border-slate-600 bg-transparent px-6 py-3 text-base font-semibold text-slate-300 transition-all hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Continue as Guest
+            Continue Offline
           </button>
         </div>
       </div>

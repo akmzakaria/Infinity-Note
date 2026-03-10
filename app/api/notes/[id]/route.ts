@@ -43,7 +43,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         content: content || '',
         category: category || 'All',
       },
-      { new: true, runValidators: true }
+      {
+        new: true,
+        runValidators: true,
+        timestamps: false, // Prevent updatedAt from being updated
+      }
     )
 
     if (!note) {

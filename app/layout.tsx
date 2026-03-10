@@ -8,21 +8,27 @@ export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [
-      { url: '/favicon_transparent.svg', type: 'image/svg+xml' },
+      { url: '/logo_thick.svg', type: 'image/svg+xml' },
       { url: '/favicon.ico', sizes: 'any' },
     ],
-    apple: [{ url: '/favicon_transparent.svg', sizes: '180x180', type: 'image/svg+xml' }],
+    apple: [{ url: '/icon-192-thick.svg', sizes: '192x192', type: 'image/svg+xml' }],
+  },
+  other: {
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
   },
 }
 
 export const viewport = {
   themeColor: '#1D4ED8',
+  colorScheme: 'dark',
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-slate-950 text-slate-50 antialiased">
+      <body className="text-slate-50 antialiased" style={{ backgroundColor: '#0c1327' }}>
         <ClientProviders>{children}</ClientProviders>
       </body>
     </html>

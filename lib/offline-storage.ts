@@ -61,7 +61,7 @@ export function updateOfflineNote(
   const updatedNote = {
     ...notes[noteIndex],
     ...updates,
-    updatedAt: new Date().toISOString(),
+    // Keep the original updatedAt timestamp - don't update it
     synced: false,
   }
 

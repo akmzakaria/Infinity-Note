@@ -20,7 +20,7 @@ export default function Logo({ size = 'md', className = '' }: LogoProps) {
     <div className={`flex items-center gap-3 ${className}`}>
       {/* Infinity icon */}
       <img
-        src="/logo_transparent.svg"
+        src="/logo_thick.svg"
         alt="Infinity"
         width={iconSizes[size].width}
         height={iconSizes[size].height}

@@ -309,7 +309,15 @@ function HomeContent() {
         // Offline mode
         deleteOfflineNote(id)
       }
-      setRefreshKey((k) => k + 1)
+
+      // Update local state by removing the deleted note
+      setNotes((prevNotes) => prevNotes.filter((note) => note._id !== id))
+
+      // showToast({
+      //   variant: 'success',
+      //   title: 'Note deleted',
+      //   description: 'The note has been successfully deleted.',
+      // })
     } catch (error) {
       console.error('Error deleting note:', error)
       showToast({
@@ -343,14 +351,17 @@ function HomeContent() {
   const category = searchParams.get('category')
   if (!category) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-slate-950 text-slate-100">
+      <div
+        className="flex min-h-dvh items-center justify-center text-slate-100"
+        style={{ backgroundColor: '#0c1327' }}
+      >
         Loading...
       </div>
     )
   }
 
   return (
-    <div className="relative flex min-h-dvh bg-gradient-to-b from-slate-950/60 via-slate-950 to-slate-950">
+    <div className="relative flex min-h-dvh" style={{ backgroundColor: '#0c1327' }}>
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -360,8 +371,14 @@ function HomeContent() {
         onCategorySelect={handleCategorySelect}
       />
 
-      <main className="relative flex w-full flex-1 flex-col bg-slate-950/40 md:ml-[280px] md:w-[calc(100%-280px)] lg:mx-auto lg:max-w-[1200px] lg:pl-[280px]">
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800/60 bg-slate-950/80 px-6 py-4 backdrop-blur">
+      <main
+        className="relative flex w-full flex-1 flex-col md:ml-[280px] md:w-[calc(100%-280px)] lg:mx-auto lg:max-w-[1200px] lg:pl-[280px]"
+        style={{ backgroundColor: '#0c1327' }}
+      >
+        <header
+          className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800/60 px-6 py-4 backdrop-blur"
+          style={{ backgroundColor: '#0c1327' }}
+        >
           <button
             className="flex h-10 w-10 items-center justify-center rounded-full text-slate-100 transition-colors hover:bg-slate-800 md:hidden"
             onClick={() => setSidebarOpen(true)}
@@ -501,7 +518,10 @@ export default function Home() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-dvh items-center justify-center bg-slate-950 text-slate-100">
+        <div
+          className="flex min-h-dvh items-center justify-center text-slate-100"
+          style={{ backgroundColor: '#0c1327' }}
+        >
           Loading...
         </div>
       }
