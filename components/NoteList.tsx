@@ -48,10 +48,10 @@ export default function NoteList({ notes, loading, onDelete, searchQuery = '' }:
   if (loading) {
     return (
       <div
-        className="flex flex-1 items-center justify-center p-12 text-[1.1rem] text-neutral-400"
+        className="flex flex-1 items-center justify-center p-12"
         style={{ backgroundColor: '#0c1327' }}
       >
-        <p>Loading notes...</p>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-600 border-t-sky-400"></div>
       </div>
     )
   }
