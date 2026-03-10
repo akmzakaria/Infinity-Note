@@ -183,16 +183,16 @@ export default function EditNote() {
     <div className="min-h-dvh bg-gradient-to-b from-slate-950/60 via-slate-950 to-slate-950 md:flex md:items-center md:justify-center md:p-8">
       <div className="flex min-h-dvh w-full flex-col bg-slate-900/80 backdrop-blur md:min-h-[700px] md:max-w-[900px] md:rounded-xl md:shadow-xl md:shadow-black/40 md:ring-1 md:ring-slate-800/70">
         <div className="border-b border-slate-800/70 px-4 py-4 md:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 md:gap-4">
+          <div className="flex items-center justify-between gap-3 md:gap-4">
             <input
               type="text"
               placeholder="Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="min-w-[200px] flex-1 bg-transparent text-2xl font-semibold text-slate-50 outline-none placeholder:font-normal placeholder:text-slate-400"
+              className="min-w-0 flex-1 bg-transparent text-2xl font-semibold text-slate-50 outline-none placeholder:font-normal placeholder:text-slate-400"
             />
 
-            <div className="flex items-center gap-3">
+            <div className="flex shrink-0 items-center gap-3">
               {saving && (
                 <div className="flex items-center gap-2 text-sm text-slate-400">
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-slate-400"></div>
@@ -209,10 +209,11 @@ export default function EditNote() {
 
               <div className="relative">
                 <button
-                  className="whitespace-nowrap rounded-md border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-700 hover:text-slate-50"
+                  className="whitespace-nowrap rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-700 hover:text-slate-50 md:px-4"
                   onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
                 >
-                  Category: {category}
+                  <span className="hidden md:inline">Category: </span>
+                  {category}
                 </button>
                 {showCategoryDropdown && (
                   <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[100] min-w-[180px] overflow-hidden rounded-md border border-slate-700 bg-slate-900 shadow-xl shadow-black/60">

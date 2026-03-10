@@ -42,7 +42,7 @@ interface OfflineNote {
 function HomeContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, logout } = useAuth()
+  const { user, logout, loading: authLoading } = useAuth()
   const { showToast } = useToast()
   const [notes, setNotes] = useState<Note[]>([])
   const [selectedCategory, setSelectedCategory] = useState('All')
@@ -57,14 +57,23 @@ function HomeContent() {
   const fetchSeq = useRef(0)
   const profileDropdownRef = useRef<HTMLDivElement>(null)
 
-  // Check if accessing base URL without category - redirect to login
+  // Check if accessing base URL without category - redirect based on auth status
   useEffect(() => {
+    // Wait for auth to finish loading
+    if (authLoading) return
+
     const category = searchParams.get('category')
     if (!category) {
-      router.push('/login')
+      if (user) {
+        // User is logged in - redirect to All category page
+        router.push('/?category=All')
+      } else {
+        // User is not logged in - redirect to login page
+        router.push('/login')
+      }
       return
     }
-  }, [router, searchParams])
+  }, [router, searchParams, user, authLoading])
 
   useEffect(() => {
     const currentSeq = ++fetchSeq.current
