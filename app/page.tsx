@@ -57,6 +57,15 @@ function HomeContent() {
   const fetchSeq = useRef(0)
   const profileDropdownRef = useRef<HTMLDivElement>(null)
 
+  // Check if accessing base URL without category - redirect to login
+  useEffect(() => {
+    const category = searchParams.get('category')
+    if (!category) {
+      router.push('/login')
+      return
+    }
+  }, [router, searchParams])
+
   useEffect(() => {
     const currentSeq = ++fetchSeq.current
     const controller = new AbortController()
@@ -328,6 +337,16 @@ function HomeContent() {
         description: 'Please try again.',
       })
     }
+  }
+
+  // Don't render if no category parameter (redirecting to login)
+  const category = searchParams.get('category')
+  if (!category) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-slate-950 text-slate-100">
+        Loading...
+      </div>
+    )
   }
 
   return (

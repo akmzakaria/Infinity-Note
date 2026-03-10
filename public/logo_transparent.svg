@@ -1,0 +1,19 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Infinity symbol with transparent background -->
+  <path
+    d="M10 20C10 16.6863 12.6863 14 16 14C19 14 21 17 22 20C23 23 25 26 28 26C31.3137 26 34 23.3137 34 20"
+    stroke="#38bdf8"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    fill="none"
+  />
+  <path
+    d="M34 20C34 23.3137 31.3137 26 28 26C25 26 23 23 22 20C21 17 19 14 16 14C12.6863 14 10 16.6863 10 20"
+    stroke="#38bdf8"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    fill="none"
+  />
+</svg>

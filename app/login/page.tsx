@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { useToast } from '@/components/ToastProvider'
+import Logo from '@/components/Logo'
 
 // Prevent this page from being prerendered during build
 export const dynamic = 'force-dynamic'
@@ -13,6 +14,11 @@ export default function LoginPage() {
   const { showToast } = useToast()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+
+  const handleGuestAccess = () => {
+    // Navigate to All category page for offline notes
+    router.push('/?category=All')
+  }
 
   const handleGoogleSignIn = async () => {
     setLoading(true)
@@ -40,13 +46,18 @@ export default function LoginPage() {
     <div className="flex min-h-dvh items-center justify-center bg-gradient-to-b from-slate-950/60 via-slate-950 to-slate-950 p-4">
       <div className="w-full max-w-md rounded-2xl bg-slate-900/80 backdrop-blur p-8 shadow-xl shadow-black/40 ring-1 ring-slate-800/70">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-slate-50 mb-2">Infinity Note</h1>
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <Logo size="lg" />
+          </div>
+
+          <h1 className="text-3xl font-bold text-slate-50 mb-2">Welcome Back</h1>
           <p className="text-slate-400 mb-8">Sign in to access your notes</p>
 
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 rounded-md bg-white px-6 py-3 text-base font-semibold text-gray-900 transition-all hover:bg-gray-50 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-3 rounded-md bg-white px-6 py-3 text-base font-semibold text-gray-900 transition-all hover:bg-gray-50 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60 mb-4"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path
@@ -67,6 +78,14 @@ export default function LoginPage() {
               />
             </svg>
             {loading ? 'Signing in...' : 'Continue with Google'}
+          </button>
+
+          <button
+            onClick={handleGuestAccess}
+            disabled={loading}
+            className="w-full rounded-md border border-slate-600 bg-transparent px-6 py-3 text-base font-semibold text-slate-300 transition-all hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Continue as Guest
           </button>
         </div>
       </div>

@@ -1,0 +1,23 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="180" height="180" rx="36" fill="url(#grad)" />
+  <path
+    d="M54 90C54 78.9543 62.9543 70 74 70C85 70 93 82 99 90C105 98 113 110 124 110C135.046 110 144 101.046 144 90"
+    stroke="white"
+    strokeWidth="8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  />
+  <path
+    d="M144 90C144 101.046 135.046 110 124 110C113 110 105 98 99 90C93 82 85 70 74 70C62.9543 70 54 78.9543 54 90"
+    stroke="white"
+    strokeWidth="8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  />
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+      <stop stopColor="#0F172A" />
+      <stop offset="1" stopColor="#1D4ED8" />
+    </linearGradient>
+  </defs>
+</svg>

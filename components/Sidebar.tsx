@@ -1,8 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
 import { useToast } from './ToastProvider'
+import Logo from './Logo'
 
 interface SidebarProps {
   isOpen: boolean
@@ -61,15 +61,10 @@ export default function Sidebar({
         ].join(' ')}
       >
         <div className="flex h-full flex-col gap-4 p-6">
-          {/* <Link
-            href={`/new?category=${encodeURIComponent(selectedCategory)}`}
-            className="font-semibold text-sky-400 underline underline-offset-4 transition-colors hover:text-sky-300"
-            onClick={onClose}
-          >
-            <span>New</span>
-          </Link> */}
+          {/* Logo */}
+          <Logo size="md" className="mb-2" />
 
-          {/* <div className="h-px bg-slate-800/80" /> */}
+          <div className="h-px bg-slate-800/80" />
 
           <div className="flex-1">
             <h2 className="mb-2 font-semibold text-slate-100">Categories</h2>
@@ -132,7 +127,7 @@ export default function Sidebar({
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-[14px] text-slate-50 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/40"
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleNewCategory()
                   }
