@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { fetchCategories } from '@/lib/categories-api'
 import { useToast } from '@/components/ToastProvider'
-import ProtectedRoute from '@/components/ProtectedRoute'
 import { authenticatedFetch } from '@/lib/api'
 import { useAuth } from '@/components/AuthProvider'
+import { getOfflineNoteById, updateOfflineNote, getOfflineCategories } from '@/lib/offline-storage'
 
 // Prevent this page from being prerendered during build
 export const dynamic = 'force-dynamic'
@@ -35,22 +35,38 @@ export default function EditNote() {
   const [originalTitle, setOriginalTitle] = useState('')
   const [originalContent, setOriginalContent] = useState('')
   const [originalCategory, setOriginalCategory] = useState('All')
+  const [isOffline, setIsOffline] = useState(false)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const fetchNote = useCallback(async () => {
     try {
-      const res = await authenticatedFetch(`/api/notes/${noteId}`)
-      if (res.ok) {
-        const note: Note = await res.json()
-        setTitle(note.title)
-        setContent(note.content)
-        setCategory(note.category)
-        // Store original values for comparison
-        setOriginalTitle(note.title)
-        setOriginalContent(note.content)
-        setOriginalCategory(note.category)
+      if (user) {
+        // Try to fetch from server first
+        const res = await authenticatedFetch(`/api/notes/${noteId}`)
+        if (res.ok) {
+          const note: Note = await res.json()
+          setTitle(note.title)
+          setContent(note.content)
+          setCategory(note.category)
+          setOriginalTitle(note.title)
+          setOriginalContent(note.content)
+          setOriginalCategory(note.category)
+          return
+        }
+      }
+
+      // Fallback to offline note
+      const offlineNote = getOfflineNoteById(noteId)
+      if (offlineNote) {
+        setTitle(offlineNote.title)
+        setContent(offlineNote.content)
+        setCategory(offlineNote.category)
+        setOriginalTitle(offlineNote.title)
+        setOriginalContent(offlineNote.content)
+        setOriginalCategory(offlineNote.category)
+        setIsOffline(true)
       } else {
-        throw new Error('Failed to fetch note')
+        throw new Error('Note not found')
       }
     } catch (error) {
       console.error('Error fetching note:', error)
@@ -63,51 +79,72 @@ export default function EditNote() {
     } finally {
       setLoading(false)
     }
-  }, [noteId, showToast, router])
+  }, [noteId, user, showToast, router])
 
-  useEffect(() => {
-    if (noteId && user) {
-      fetchNote()
-      loadUserCategories()
-    }
-  }, [fetchNote, noteId, user])
-
-  const loadUserCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
-      const userCategories = await fetchCategories()
-      setCategories(userCategories)
+      if (user && !isOffline) {
+        const userCategories = await fetchCategories()
+        setCategories(userCategories)
+      } else {
+        const offlineCategories = getOfflineCategories()
+        setCategories(offlineCategories)
+      }
     } catch (error) {
       console.error('Error loading categories:', error)
-      setCategories(['All'])
+      const offlineCategories = getOfflineCategories()
+      setCategories(offlineCategories)
     }
-  }
+  }, [user, isOffline])
+
+  useEffect(() => {
+    if (noteId) {
+      fetchNote()
+      loadCategories()
+    }
+  }, [fetchNote, noteId, loadCategories])
 
   const updateNote = useCallback(async () => {
     setSaving(true)
     try {
-      const res = await authenticatedFetch(`/api/notes/${noteId}`, {
-        method: 'PUT',
-        body: JSON.stringify({
+      if (user && !isOffline) {
+        // Update on server
+        const res = await authenticatedFetch(`/api/notes/${noteId}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            title: title.trim() || 'Untitled',
+            content: content.trim(),
+            category,
+          }),
+        })
+
+        if (res.ok) {
+          setOriginalTitle(title.trim() || 'Untitled')
+          setOriginalContent(content.trim())
+          setOriginalCategory(category)
+        } else {
+          throw new Error('Failed to update note')
+        }
+      } else {
+        // Update offline
+        const updatedNote = updateOfflineNote(noteId, {
           title: title.trim() || 'Untitled',
           content: content.trim(),
           category,
-        }),
-      })
+        })
 
-      if (res.ok) {
-        // Update original values to reflect saved state
-        setOriginalTitle(title.trim() || 'Untitled')
-        setOriginalContent(content.trim())
-        setOriginalCategory(category)
-      } else {
-        throw new Error('Failed to update note')
+        if (updatedNote) {
+          setOriginalTitle(updatedNote.title)
+          setOriginalContent(updatedNote.content)
+          setOriginalCategory(updatedNote.category)
+        }
       }
     } catch (error) {
       console.error('Error updating note:', error)
     } finally {
       setSaving(false)
     }
-  }, [noteId, title, content, category])
+  }, [noteId, title, content, category, user, isOffline])
 
   const hasUnsavedChanges = useCallback(() => {
     return title !== originalTitle || content !== originalContent || category !== originalCategory
@@ -115,7 +152,7 @@ export default function EditNote() {
 
   // Real-time saving with debouncing
   useEffect(() => {
-    if (loading) return // Don't save while loading initial data
+    if (loading) return
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current)
@@ -124,7 +161,7 @@ export default function EditNote() {
     if (hasUnsavedChanges()) {
       saveTimeoutRef.current = setTimeout(() => {
         updateNote()
-      }, 1000) // Save after 1 second of inactivity
+      }, 1000)
     }
 
     return () => {
@@ -136,77 +173,80 @@ export default function EditNote() {
 
   if (loading) {
     return (
-      <ProtectedRoute>
-        <div className="flex min-h-dvh items-center justify-center bg-gradient-to-b from-slate-950/60 via-slate-950 to-slate-950 p-4">
-          <div className="text-[1.1rem] text-slate-400">Loading note...</div>
-        </div>
-      </ProtectedRoute>
+      <div className="flex min-h-dvh items-center justify-center bg-gradient-to-b from-slate-950/60 via-slate-950 to-slate-950 p-4">
+        <div className="text-[1.1rem] text-slate-400">Loading note...</div>
+      </div>
     )
   }
 
   return (
-    <ProtectedRoute>
-      <div className="min-h-dvh bg-gradient-to-b from-slate-950/60 via-slate-950 to-slate-950 md:flex md:items-center md:justify-center md:p-8">
-        <div className="flex min-h-dvh w-full flex-col bg-slate-900/80 backdrop-blur md:min-h-[700px] md:max-w-[900px] md:rounded-xl md:shadow-xl md:shadow-black/40 md:ring-1 md:ring-slate-800/70">
-          <div className="border-b border-slate-800/70 px-4 py-4 md:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3 md:gap-4">
-              <input
-                type="text"
-                placeholder="Title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="min-w-[200px] flex-1 bg-transparent text-2xl font-semibold text-slate-50 outline-none placeholder:font-normal placeholder:text-slate-400"
-              />
+    <div className="min-h-dvh bg-gradient-to-b from-slate-950/60 via-slate-950 to-slate-950 md:flex md:items-center md:justify-center md:p-8">
+      <div className="flex min-h-dvh w-full flex-col bg-slate-900/80 backdrop-blur md:min-h-[700px] md:max-w-[900px] md:rounded-xl md:shadow-xl md:shadow-black/40 md:ring-1 md:ring-slate-800/70">
+        <div className="border-b border-slate-800/70 px-4 py-4 md:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 md:gap-4">
+            <input
+              type="text"
+              placeholder="Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="min-w-[200px] flex-1 bg-transparent text-2xl font-semibold text-slate-50 outline-none placeholder:font-normal placeholder:text-slate-400"
+            />
 
-              <div className="flex items-center gap-3">
-                {saving && (
-                  <div className="flex items-center gap-2 text-sm text-slate-400">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-slate-400"></div>
-                    <span className="hidden md:inline">Saving...</span>
+            <div className="flex items-center gap-3">
+              {saving && (
+                <div className="flex items-center gap-2 text-sm text-slate-400">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-slate-400"></div>
+                  <span className="hidden md:inline">Saving...</span>
+                </div>
+              )}
+
+              {isOffline && (
+                <div className="flex items-center gap-2 text-xs text-amber-400">
+                  <div className="h-2 w-2 rounded-full bg-amber-400"></div>
+                  <span className="hidden md:inline">Offline</span>
+                </div>
+              )}
+
+              <div className="relative">
+                <button
+                  className="whitespace-nowrap rounded-md border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-700 hover:text-slate-50"
+                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                >
+                  Category: {category}
+                </button>
+                {showCategoryDropdown && (
+                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[100] min-w-[180px] overflow-hidden rounded-md border border-slate-700 bg-slate-900 shadow-xl shadow-black/60">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat}
+                        className={[
+                          'w-full border-b border-slate-800 px-4 py-3 text-left text-sm transition-colors last:border-b-0 hover:bg-slate-800',
+                          category === cat
+                            ? 'bg-sky-500/20 font-semibold text-sky-300'
+                            : 'text-slate-300',
+                        ].join(' ')}
+                        onClick={() => {
+                          setCategory(cat)
+                          setShowCategoryDropdown(false)
+                        }}
+                      >
+                        {cat}
+                      </button>
+                    ))}
                   </div>
                 )}
-
-                <div className="relative">
-                  <button
-                    className="whitespace-nowrap rounded-md border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-700 hover:text-slate-50"
-                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                  >
-                    Category: {category}
-                  </button>
-                  {showCategoryDropdown && (
-                    <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[100] min-w-[180px] overflow-hidden rounded-md border border-slate-700 bg-slate-900 shadow-xl shadow-black/60">
-                      {categories.map((cat) => (
-                        <button
-                          key={cat}
-                          className={[
-                            'w-full border-b border-slate-800 px-4 py-3 text-left text-sm transition-colors last:border-b-0 hover:bg-slate-800',
-                            category === cat
-                              ? 'bg-sky-500/20 font-semibold text-sky-300'
-                              : 'text-slate-300',
-                          ].join(' ')}
-                          onClick={() => {
-                            setCategory(cat)
-                            setShowCategoryDropdown(false)
-                          }}
-                        >
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
           </div>
-
-          <textarea
-            placeholder="Start writing..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="min-h-[420px] flex-1 resize-none bg-transparent px-4 py-4 text-base leading-relaxed text-slate-100 outline-none placeholder:text-slate-400 md:min-h-[520px] md:p-6"
-          />
         </div>
+
+        <textarea
+          placeholder="Start writing..."
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          className="min-h-[420px] flex-1 resize-none bg-transparent px-4 py-4 text-base leading-relaxed text-slate-100 outline-none placeholder:text-slate-400 md:min-h-[520px] md:p-6"
+        />
       </div>
-    </ProtectedRoute>
+    </div>
   )
 }
