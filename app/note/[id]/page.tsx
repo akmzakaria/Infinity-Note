@@ -8,6 +8,9 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import { authenticatedFetch } from '@/lib/api'
 import { useAuth } from '@/components/AuthProvider'
 
+// Prevent this page from being prerendered during build
+export const dynamic = 'force-dynamic'
+
 interface Note {
   _id: string
   title: string

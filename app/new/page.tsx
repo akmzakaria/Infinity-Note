@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { fetchCategories } from '@/lib/categories-api'
@@ -8,7 +9,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import { authenticatedFetch } from '@/lib/api'
 import { useAuth } from '@/components/AuthProvider'
 
-export default function NewNote() {
+function NewNoteContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
@@ -103,11 +104,6 @@ export default function NewNote() {
   const handleDiscardChanges = () => {
     setShowUnsavedAlert(false)
     router.back()
-  }
-
-  const handleSaveAndExit = async () => {
-    setShowUnsavedAlert(false)
-    await handleSave()
   }
 
   return (
@@ -206,5 +202,19 @@ export default function NewNote() {
         )}
       </div>
     </ProtectedRoute>
+  )
+}
+
+export default function NewNote() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-dvh items-center justify-center bg-slate-950 text-slate-100">
+          Loading...
+        </div>
+      }
+    >
+      <NewNoteContent />
+    </Suspense>
   )
 }

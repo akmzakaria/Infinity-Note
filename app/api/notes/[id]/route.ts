@@ -3,6 +3,9 @@ import connectDB from '@/lib/mongodb'
 import Note from '@/models/Note'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
 
+// Prevent this route from being processed during build
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await getAuthenticatedUser(request)

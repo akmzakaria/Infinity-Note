@@ -5,8 +5,11 @@ import ClientProviders from '@/components/ClientProviders';
 export const metadata: Metadata = {
   title: 'Infinity Note',
   description: 'A modern note-taking application',
-  themeColor: '#1D4ED8',
   manifest: '/manifest.webmanifest',
+};
+
+export const viewport = {
+  themeColor: '#1D4ED8',
 };
 
 export default function RootLayout({

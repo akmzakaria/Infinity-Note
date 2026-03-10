@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import Sidebar from '@/components/Sidebar'
 import NoteList from '@/components/NoteList'
@@ -20,7 +21,7 @@ interface Note {
   updatedAt: string
 }
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, logout } = useAuth()
@@ -330,5 +331,19 @@ export default function Home() {
         )}
       </div>
     </ProtectedRoute>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-dvh items-center justify-center bg-slate-950 text-slate-100">
+          Loading...
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   )
 }

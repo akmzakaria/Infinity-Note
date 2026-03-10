@@ -5,6 +5,9 @@ import { useAuth } from '@/components/AuthProvider'
 import { useToast } from '@/components/ToastProvider'
 import ProtectedRoute from '@/components/ProtectedRoute'
 
+// Prevent this page from being prerendered during build
+export const dynamic = 'force-dynamic'
+
 export default function Profile() {
   const router = useRouter()
   const { user, logout } = useAuth()

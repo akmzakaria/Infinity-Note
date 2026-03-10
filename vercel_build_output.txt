@@ -1,0 +1,85 @@
+Vercel CLI 49.1.1
+WARN! Build not running on Vercel. System environment variables will not be available.
+WARNING: You should not upload the `.next` directory.
+Installing dependencies...
+
+up to date in 901ms
+
+166 packages are looking for funding
+  run `npm fund` for details
+Detected Next.js version: 14.1.0
+Running "npm run build"
+
+> notes-app@0.1.0 build
+> next build
+
+   ▲ Next.js 14.1.0
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/8) ...
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /_not-found. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /_not-found. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /login. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /login. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /profile. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /profile. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+   Generating static pages (2/8) 
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+   Generating static pages (4/8) 
+   Generating static pages (6/8) 
+ ✓ Generating static pages (8/8) 
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    12.2 kB         136 kB
+├ ○ /_not-found                          882 B          85.1 kB
+├ λ /api/categories                      0 B                0 B
+├ λ /api/notes                           0 B                0 B
+├ λ /api/notes/[id]                      0 B                0 B
+├ ○ /login                               2.27 kB         126 kB
+├ ○ /manifest.webmanifest                0 B                0 B
+├ ○ /new                                 3.34 kB         127 kB
+├ λ /note/[id]                           3.46 kB         127 kB
+└ ○ /profile                             2.02 kB         126 kB
++ First Load JS shared by all            84.2 kB
+  ├ chunks/69-e74b799fc33b8da1.js        28.9 kB
+  ├ chunks/fd9d1056-9e477e56591d2778.js  53.4 kB
+  └ other shared chunks (total)          1.96 kB
+
+
+○  (Static)   prerendered as static content
+λ  (Dynamic)  server-rendered on demand using Node.js
+
+Traced Next.js server files in: 228.642ms
+Tracing entries due to missing build traces:
+[
+  "E:/VS Code/Workspace4 (NEXT.JS)/Projects/Infinity Note/.next/server/app/new/page.js",
+  "E:/VS Code/Workspace4 (NEXT.JS)/Projects/Infinity Note/.next/server/app/login/page.js",
+  "E:/VS Code/Workspace4 (NEXT.JS)/Projects/Infinity Note/.next/server/app/profile/page.js",
+  "E:/VS Code/Workspace4 (NEXT.JS)/Projects/Infinity Note/.next/server/app/note/[id]/page.js",
+  "E:/VS Code/Workspace4 (NEXT.JS)/Projects/Infinity Note/.next/server/app/manifest.webmanifest/route.js",
+  "E:/VS Code/Workspace4 (NEXT.JS)/Projects/Infinity Note/.next/server/app/api/categories/route.js",
+  "E:/VS Code/Workspace4 (NEXT.JS)/Projects/Infinity Note/.next/server/app/api/notes/[id]/route.js",
+  "E:/VS Code/Workspace4 (NEXT.JS)/Projects/Infinity Note/.next/server/app/api/notes/route.js"
+]: 2.231s
+Created all serverless functions in: 2.582s
+Collected static files (public/, static/, .next/static): 9.193ms
+Error: EPERM: operation not permitted, symlink '..\_not-found.func' -> 'E:\VS Code\Workspace4 (NEXT.JS)\Projects\Infinity Note\.vercel\output\functions\note\[id].func'

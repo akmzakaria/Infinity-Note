@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { useToast } from '@/components/ToastProvider'
 
+// Prevent this page from being prerendered during build
+export const dynamic = 'force-dynamic'
+
 export default function LoginPage() {
   const { signInWithGoogle } = useAuth()
   const { showToast } = useToast()
