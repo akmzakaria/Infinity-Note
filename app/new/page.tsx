@@ -15,6 +15,7 @@ export default function NewNote() {
   const [categories, setCategories] = useState(['All', 'Quran', 'Books'])
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [showUnsavedAlert, setShowUnsavedAlert] = useState(false)
 
   useEffect(() => {
     const loaded = loadCategories()
@@ -73,6 +74,28 @@ export default function NewNote() {
     }
   }
 
+  const hasUnsavedChanges = () => {
+    return title.trim() !== '' || content.trim() !== ''
+  }
+
+  const handleCancel = () => {
+    if (hasUnsavedChanges()) {
+      setShowUnsavedAlert(true)
+    } else {
+      router.back()
+    }
+  }
+
+  const handleDiscardChanges = () => {
+    setShowUnsavedAlert(false)
+    router.back()
+  }
+
+  const handleSaveAndExit = async () => {
+    setShowUnsavedAlert(false)
+    await handleSave()
+  }
+
   return (
     <div className="min-h-dvh bg-gradient-to-b from-slate-950/60 via-slate-950 to-slate-950 md:flex md:items-center md:justify-center md:p-8">
       <div className="flex min-h-dvh w-full flex-col bg-slate-900/80 backdrop-blur md:min-h-[700px] md:max-w-[900px] md:rounded-xl md:shadow-xl md:shadow-black/40 md:ring-1 md:ring-slate-800/70">
@@ -128,7 +151,7 @@ export default function NewNote() {
         <div className="flex justify-end gap-3 border-t border-slate-800/70 px-4 py-4 md:gap-4 md:p-6">
           <button
             className="rounded-md px-5 py-3 text-base text-slate-300 transition-colors hover:bg-slate-800 hover:text-slate-100"
-            onClick={() => router.back()}
+            onClick={handleCancel}
           >
             Cancel
           </button>
@@ -141,6 +164,38 @@ export default function NewNote() {
           </button>
         </div>
       </div>
+
+      {showUnsavedAlert && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-slate-900 p-6 shadow-xl shadow-black/60">
+            <h2 className="text-lg font-semibold text-slate-50">Save your changes?</h2>
+            <p className="mt-2 text-sm text-slate-400">
+              You have unsaved changes. Would you like to save this note before leaving?
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                className="rounded-md px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-slate-100"
+                onClick={() => setShowUnsavedAlert(false)}
+              >
+                Keep editing
+              </button>
+              <button
+                className="rounded-md px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                onClick={handleDiscardChanges}
+              >
+                Discard
+              </button>
+              {/* <button
+                className="rounded-md bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-sm font-semibold text-white hover:from-sky-400 hover:to-blue-500"
+                onClick={handleSaveAndExit}
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Save'}
+              </button> */}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
