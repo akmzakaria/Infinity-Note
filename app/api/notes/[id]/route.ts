@@ -1,67 +1,59 @@
-import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import Note from '@/models/Note';
+import { NextRequest, NextResponse } from 'next/server'
+import connectDB from '@/lib/mongodb'
+import Note from '@/models/Note'
+import { getAuthenticatedUser } from '@/lib/auth-middleware'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await connectDB();
-    const { id } = await params;
-    const note = await Note.findById(id);
-    
+    const user = await getAuthenticatedUser(request)
+    await connectDB()
+    const { id } = await params
+
+    const note = await Note.findOne({ _id: id, userId: user.uid })
+
     if (!note) {
-      return NextResponse.json(
-        { error: 'Note not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Note not found' }, { status: 404 })
     }
 
-    return NextResponse.json(note);
+    return NextResponse.json(note)
   } catch (error) {
-    console.error('Error fetching note:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch note' },
-      { status: 500 }
-    );
+    console.error('Error fetching note:', error)
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    return NextResponse.json({ error: 'Failed to fetch note' }, { status: 500 })
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await connectDB();
-    const { id } = await params;
-    const body = await request.json();
-    const { title, content, category } = body;
+    const user = await getAuthenticatedUser(request)
+    await connectDB()
+    const { id } = await params
+    const body = await request.json()
+    const { title, content, category } = body
 
-    const note = await Note.findByIdAndUpdate(
-      id,
+    const note = await Note.findOneAndUpdate(
+      { _id: id, userId: user.uid },
       {
         title: title || 'Untitled',
         content: content || '',
         category: category || 'All',
       },
       { new: true, runValidators: true }
-    );
+    )
 
     if (!note) {
-      return NextResponse.json(
-        { error: 'Note not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Note not found' }, { status: 404 })
     }
 
-    return NextResponse.json(note);
+    return NextResponse.json(note)
   } catch (error) {
-    console.error('Error updating note:', error);
-    return NextResponse.json(
-      { error: 'Failed to update note' },
-      { status: 500 }
-    );
+    console.error('Error updating note:', error)
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    return NextResponse.json({ error: 'Failed to update note' }, { status: 500 })
   }
 }
 
@@ -70,24 +62,22 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDB();
-    const { id } = await params;
-    const note = await Note.findByIdAndDelete(id);
+    const user = await getAuthenticatedUser(request)
+    await connectDB()
+    const { id } = await params
+
+    const note = await Note.findOneAndDelete({ _id: id, userId: user.uid })
 
     if (!note) {
-      return NextResponse.json(
-        { error: 'Note not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Note not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ message: 'Note deleted successfully' });
+    return NextResponse.json({ message: 'Note deleted successfully' })
   } catch (error) {
-    console.error('Error deleting note:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete note' },
-      { status: 500 }
-    );
+    console.error('Error deleting note:', error)
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    return NextResponse.json({ error: 'Failed to delete note' }, { status: 500 })
   }
 }
-

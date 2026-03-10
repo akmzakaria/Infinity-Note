@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { loadCategories } from '@/lib/categories'
+import { fetchCategories } from '@/lib/categories-api'
 import { useToast } from '@/components/ToastProvider'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import { authenticatedFetch } from '@/lib/api'
+import { useAuth } from '@/components/AuthProvider'
 
 interface Note {
   _id: string
@@ -17,12 +19,13 @@ export default function EditNote() {
   const router = useRouter()
   const params = useParams()
   const noteId = params.id as string
+  const { user } = useAuth()
   const { showToast } = useToast()
 
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [category, setCategory] = useState('All')
-  const [categories, setCategories] = useState(['All', 'Quran', 'Books'])
+  const [categories, setCategories] = useState(['All'])
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -32,18 +35,25 @@ export default function EditNote() {
   const [originalCategory, setOriginalCategory] = useState('All')
 
   useEffect(() => {
-    if (noteId) {
+    if (noteId && user) {
       fetchNote()
+      loadUserCategories()
     }
-  }, [noteId])
+  }, [noteId, user])
 
-  useEffect(() => {
-    setCategories(loadCategories())
-  }, [])
+  const loadUserCategories = async () => {
+    try {
+      const userCategories = await fetchCategories()
+      setCategories(userCategories)
+    } catch (error) {
+      console.error('Error loading categories:', error)
+      setCategories(['All'])
+    }
+  }
 
   const fetchNote = async () => {
     try {
-      const res = await fetch(`/api/notes/${noteId}`)
+      const res = await authenticatedFetch(`/api/notes/${noteId}`)
       if (res.ok) {
         const note: Note = await res.json()
         setTitle(note.title)
@@ -81,11 +91,8 @@ export default function EditNote() {
 
     setSaving(true)
     try {
-      const res = await fetch(`/api/notes/${noteId}`, {
+      const res = await authenticatedFetch(`/api/notes/${noteId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           title: title.trim() || 'Untitled',
           content: content.trim(),
@@ -236,13 +243,6 @@ export default function EditNote() {
                 >
                   Discard
                 </button>
-                {/* <button
-                className="rounded-md bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-sm font-semibold text-white hover:from-sky-400 hover:to-blue-500"
-                onClick={handleSaveAndExit}
-                disabled={saving}
-              >
-                {saving ? 'Saving...' : 'Save'}
-              </button> */}
               </div>
             </div>
           </div>

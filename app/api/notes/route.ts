@@ -1,57 +1,58 @@
-import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import Note from '@/models/Note';
+import { NextRequest, NextResponse } from 'next/server'
+import connectDB from '@/lib/mongodb'
+import Note from '@/models/Note'
+import { getAuthenticatedUser } from '@/lib/auth-middleware'
 
 export async function GET(request: NextRequest) {
   try {
-    await connectDB();
-    
-    const searchParams = request.nextUrl.searchParams;
-    const category = searchParams.get('category');
+    const user = await getAuthenticatedUser(request)
+    await connectDB()
 
-    let query: any = {};
+    const searchParams = request.nextUrl.searchParams
+    const category = searchParams.get('category')
+
+    let query: any = { userId: user.uid }
     if (category && category !== 'All') {
-      query.category = category;
+      query.category = category
     }
 
-    const notes = await Note.find(query).sort({ updatedAt: -1 });
-    return NextResponse.json(notes);
+    const notes = await Note.find(query).sort({ updatedAt: -1 })
+    return NextResponse.json(notes)
   } catch (error) {
-    console.error('Error fetching notes:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch notes' },
-      { status: 500 }
-    );
+    console.error('Error fetching notes:', error)
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    return NextResponse.json({ error: 'Failed to fetch notes' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    await connectDB();
-    
-    const body = await request.json();
-    const { title, content, category } = body;
+    const user = await getAuthenticatedUser(request)
+    await connectDB()
+
+    const body = await request.json()
+    const { title, content, category } = body
 
     if (!title && !content) {
-      return NextResponse.json(
-        { error: 'Title or content is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Title or content is required' }, { status: 400 })
     }
 
     const note = await Note.create({
       title: title || 'Untitled',
       content: content || '',
       category: category || 'All',
-    });
+      userId: user.uid,
+      userEmail: user.email || '',
+    })
 
-    return NextResponse.json(note, { status: 201 });
+    return NextResponse.json(note, { status: 201 })
   } catch (error) {
-    console.error('Error creating note:', error);
-    return NextResponse.json(
-      { error: 'Failed to create note' },
-      { status: 500 }
-    );
+    console.error('Error creating note:', error)
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    return NextResponse.json({ error: 'Failed to create note' }, { status: 500 })
   }
 }
-

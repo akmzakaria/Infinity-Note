@@ -2,33 +2,48 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { loadCategories } from '@/lib/categories'
+import { fetchCategories } from '@/lib/categories-api'
 import { useToast } from '@/components/ToastProvider'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import { authenticatedFetch } from '@/lib/api'
+import { useAuth } from '@/components/AuthProvider'
 
 export default function NewNote() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { user } = useAuth()
   const { showToast } = useToast()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [category, setCategory] = useState('All')
-  const [categories, setCategories] = useState(['All', 'Quran', 'Books'])
+  const [categories, setCategories] = useState(['All'])
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
   const [saving, setSaving] = useState(false)
   const [showUnsavedAlert, setShowUnsavedAlert] = useState(false)
 
   useEffect(() => {
-    const loaded = loadCategories()
-    setCategories(loaded)
+    if (!user) return
 
-    const fromQuery = searchParams.get('category')
-    if (fromQuery && loaded.includes(fromQuery)) {
-      setCategory(fromQuery)
-    } else {
-      setCategory('All')
+    const loadUserCategories = async () => {
+      try {
+        const userCategories = await fetchCategories()
+        setCategories(userCategories)
+
+        const fromQuery = searchParams.get('category')
+        if (fromQuery && userCategories.includes(fromQuery)) {
+          setCategory(fromQuery)
+        } else {
+          setCategory('All')
+        }
+      } catch (error) {
+        console.error('Error loading categories:', error)
+        setCategories(['All'])
+        setCategory('All')
+      }
     }
-  }, [searchParams])
+
+    loadUserCategories()
+  }, [user, searchParams])
 
   const handleSave = async () => {
     if (!title.trim() && !content.trim()) {
@@ -42,11 +57,8 @@ export default function NewNote() {
 
     setSaving(true)
     try {
-      const res = await fetch('/api/notes', {
+      const res = await authenticatedFetch('/api/notes', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           title: title.trim() || 'Untitled',
           content: content.trim(),
@@ -61,7 +73,8 @@ export default function NewNote() {
         })
         router.push(`/?category=${encodeURIComponent(category)}`)
       } else {
-        throw new Error('Failed to save note')
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Failed to save note')
       }
     } catch (error) {
       console.error('Error saving note:', error)
@@ -187,13 +200,6 @@ export default function NewNote() {
                 >
                   Discard
                 </button>
-                {/* <button
-                className="rounded-md bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-sm font-semibold text-white hover:from-sky-400 hover:to-blue-500"
-                onClick={handleSaveAndExit}
-                disabled={saving}
-              >
-                {saving ? 'Saving...' : 'Save'}
-              </button> */}
               </div>
             </div>
           </div>

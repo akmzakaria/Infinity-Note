@@ -1,16 +1,16 @@
-'use client';
+'use client'
 
-import { useMemo, useState } from 'react';
-import Link from 'next/link';
-import { useToast } from './ToastProvider';
+import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import { useToast } from './ToastProvider'
 
 interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-  categories: string[];
-  onCategoriesChange: (categories: string[]) => void;
-  selectedCategory: string;
-  onCategorySelect: (category: string) => void;
+  isOpen: boolean
+  onClose: () => void
+  categories: string[]
+  onCategoriesChange: (categories: string[]) => void
+  selectedCategory: string
+  onCategorySelect: (category: string) => void
 }
 
 export default function Sidebar({
@@ -21,38 +21,35 @@ export default function Sidebar({
   selectedCategory,
   onCategorySelect,
 }: SidebarProps) {
-  const [showNewCategory, setShowNewCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [pendingCategory, setPendingCategory] = useState<string | null>(null);
-  const { showToast } = useToast();
-  const deletableCategories = useMemo(
-    () => categories.filter((c) => c !== 'All'),
-    [categories]
-  );
+  const [showNewCategory, setShowNewCategory] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [pendingCategory, setPendingCategory] = useState<string | null>(null)
+  const { showToast } = useToast()
+  const deletableCategories = useMemo(() => categories.filter((c) => c !== 'All'), [categories])
 
   const handleCategoryClick = (category: string) => {
-    onCategorySelect(category);
-    onClose();
-  };
+    onCategorySelect(category)
+    onClose()
+  }
 
   const handleNewCategory = async () => {
-    const name = newCategoryName.trim();
-    if (!name) return;
+    const name = newCategoryName.trim()
+    if (!name) return
     if (categories.includes(name)) {
-      setNewCategoryName('');
-      setShowNewCategory(false);
-      return;
+      setNewCategoryName('')
+      setShowNewCategory(false)
+      return
     }
 
-    onCategoriesChange([...categories, name]);
-    setNewCategoryName('');
-    setShowNewCategory(false);
-  };
+    onCategoriesChange([...categories, name])
+    setNewCategoryName('')
+    setShowNewCategory(false)
+  }
 
   const handleDeleteCategory = (category: string) => {
-    if (category === 'All') return;
-    setPendingCategory(category);
-  };
+    if (category === 'All') return
+    setPendingCategory(category)
+  }
 
   return (
     <>
@@ -75,11 +72,9 @@ export default function Sidebar({
           <div className="h-px bg-slate-800/80" />
 
           <div className="flex-1">
-            <h2 className="mb-2 font-semibold text-slate-100">
-              Categories
-            </h2>
+            <h2 className="mb-2 font-semibold text-slate-100">Categories</h2>
             <div className="h-px bg-slate-800/80" />
-            
+
             <nav className="mt-3 flex flex-col gap-1">
               {categories.map((category) => (
                 <div key={category} className="flex items-center gap-1">
@@ -139,7 +134,7 @@ export default function Sidebar({
                 className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-[14px] text-slate-50 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/40"
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
-                    handleNewCategory();
+                    handleNewCategory()
                   }
                 }}
               />
@@ -154,7 +149,7 @@ export default function Sidebar({
         </div>
       </aside>
       {pendingCategory && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 px-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-4">
           <div className="w-full max-w-sm rounded-2xl bg-slate-900 p-6 shadow-xl shadow-black/60">
             <h2 className="text-lg font-semibold text-slate-50">
               Delete category &quot;{pendingCategory}&quot;?
@@ -172,18 +167,18 @@ export default function Sidebar({
               <button
                 className="rounded-md bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400"
                 onClick={() => {
-                  const cat = pendingCategory;
-                  setPendingCategory(null);
-                  const next = categories.filter((c) => c !== cat);
-                  onCategoriesChange(next);
+                  const cat = pendingCategory
+                  setPendingCategory(null)
+                  const next = categories.filter((c) => c !== cat)
+                  onCategoriesChange(next)
                   if (selectedCategory === cat) {
-                    onCategorySelect('All');
+                    onCategorySelect('All')
                   }
                   showToast({
                     variant: 'info',
                     title: 'Category deleted',
                     description: `"${cat}" was removed. Existing notes are unchanged.`,
-                  });
+                  })
                 }}
               >
                 Delete
@@ -193,6 +188,5 @@ export default function Sidebar({
         </div>
       )}
     </>
-  );
+  )
 }
-
