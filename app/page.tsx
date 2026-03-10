@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import NoteList from '@/components/NoteList';
 import Link from 'next/link';
@@ -24,10 +24,37 @@ export default function Home() {
   const [categories, setCategories] = useState<string[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const fetchSeq = useRef(0);
 
   useEffect(() => {
-    fetchNotes();
-  }, [selectedCategory]);
+    const currentSeq = ++fetchSeq.current;
+    const controller = new AbortController();
+
+    const run = async () => {
+      setLoading(true);
+      try {
+        const url =
+          selectedCategory === 'All'
+            ? '/api/notes'
+            : `/api/notes?category=${encodeURIComponent(selectedCategory)}`;
+        const res = await fetch(url, { signal: controller.signal });
+        const data = await res.json();
+        // Only apply the latest request result.
+        if (fetchSeq.current === currentSeq) setNotes(data);
+      } catch (error) {
+        // Ignore abort errors (category changed quickly).
+        if ((error as any)?.name !== 'AbortError') {
+          console.error('Error fetching notes:', error);
+        }
+      } finally {
+        if (fetchSeq.current === currentSeq) setLoading(false);
+      }
+    };
+
+    run();
+    return () => controller.abort();
+  }, [selectedCategory, refreshKey]);
 
   useEffect(() => {
     const initial = loadCategories();
@@ -57,25 +84,10 @@ export default function Home() {
     router.replace(`/?category=${encodeURIComponent(category)}`);
   };
 
-  const fetchNotes = async () => {
-    try {
-      const url = selectedCategory === 'All' 
-        ? '/api/notes' 
-        : `/api/notes?category=${selectedCategory}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      setNotes(data);
-    } catch (error) {
-      console.error('Error fetching notes:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleDeleteNote = async (id: string) => {
     try {
       await fetch(`/api/notes/${id}`, { method: 'DELETE' });
-      fetchNotes();
+      setRefreshKey((k) => k + 1);
     } catch (error) {
       console.error('Error deleting note:', error);
     }
