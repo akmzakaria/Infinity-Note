@@ -193,11 +193,11 @@ function HomeContent() {
         throw new Error(`HTTP error! status: ${res.status}`)
       }
       setRefreshKey((k) => k + 1)
-      showToast({
-        variant: 'success',
-        title: 'Note deleted',
-        description: 'The note has been successfully deleted.',
-      })
+      // showToast({
+      //   variant: 'success',
+      //   title: 'Note deleted',
+      //   description: 'The note has been successfully deleted.',
+      // })
     } catch (error) {
       console.error('Error deleting note:', error)
       showToast({

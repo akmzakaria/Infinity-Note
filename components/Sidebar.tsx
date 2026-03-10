@@ -61,15 +61,15 @@ export default function Sidebar({
         ].join(' ')}
       >
         <div className="flex h-full flex-col gap-4 p-6">
-          <Link
+          {/* <Link
             href={`/new?category=${encodeURIComponent(selectedCategory)}`}
             className="font-semibold text-sky-400 underline underline-offset-4 transition-colors hover:text-sky-300"
             onClick={onClose}
           >
             <span>New</span>
-          </Link>
+          </Link> */}
 
-          <div className="h-px bg-slate-800/80" />
+          {/* <div className="h-px bg-slate-800/80" /> */}
 
           <div className="flex-1">
             <h2 className="mb-2 font-semibold text-slate-100">Categories</h2>
