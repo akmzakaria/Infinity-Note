@@ -369,10 +369,10 @@ function HomeContent() {
   if (!category) {
     return (
       <div
-        className="flex min-h-dvh items-center justify-center text-slate-100"
+        className="flex flex-1 min-h-dvh items-center justify-center p-12"
         style={{ backgroundColor: '#0c1327' }}
       >
-        Loading...
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-600 border-t-sky-400"></div>
       </div>
     )
   }
@@ -562,10 +562,10 @@ export default function Home() {
     <Suspense
       fallback={
         <div
-          className="flex min-h-dvh items-center justify-center text-slate-100"
+          className="flex flex-1 min-h-dvh items-center justify-center p-12"
           style={{ backgroundColor: '#0c1327' }}
         >
-          Loading...
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-600 border-t-sky-400"></div>
         </div>
       }
     >

@@ -16,8 +16,11 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
   if (loading) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-gradient-to-b from-slate-950/60 via-slate-950 to-slate-950">
-        <div className="text-slate-400">Loading...</div>
+      <div
+        className="flex flex-1 min-h-dvh items-center justify-center p-12"
+        style={{ backgroundColor: '#0c1327' }}
+      >
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-600 border-t-sky-400"></div>
       </div>
     )
   }
