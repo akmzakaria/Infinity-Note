@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { loadCategories } from '@/lib/categories';
 
 export default function NewNote() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('All');
@@ -14,8 +15,16 @@ export default function NewNote() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setCategories(loadCategories());
-  }, []);
+    const loaded = loadCategories();
+    setCategories(loaded);
+
+    const fromQuery = searchParams.get('category');
+    if (fromQuery && loaded.includes(fromQuery)) {
+      setCategory(fromQuery);
+    } else {
+      setCategory('All');
+    }
+  }, [searchParams]);
 
   const handleSave = async () => {
     if (!title.trim() && !content.trim()) {
@@ -38,7 +47,7 @@ export default function NewNote() {
       });
 
       if (res.ok) {
-        router.push('/');
+        router.push(`/?category=${encodeURIComponent(category)}`);
       } else {
         throw new Error('Failed to save note');
       }

@@ -1,4 +1,4 @@
-export const DEFAULT_CATEGORIES = ['All', 'Quran', 'Books'] as const;
+export const DEFAULT_CATEGORIES = ['All', 'Tasks','Books'] as const;
 
 const STORAGE_KEY = 'infinity-note.categories';
 

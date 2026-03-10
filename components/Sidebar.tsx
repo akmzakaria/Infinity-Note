@@ -70,7 +70,7 @@ export default function Sidebar({
       >
         <div className="flex h-full flex-col gap-4 p-6">
           <Link
-            href="/new"
+            href={`/new?category=${encodeURIComponent(selectedCategory)}`}
             className="font-semibold text-blue-600 underline underline-offset-4 transition-colors hover:text-blue-700"
             onClick={onClose}
           >
@@ -80,8 +80,8 @@ export default function Sidebar({
           <div className="h-px bg-neutral-200" />
 
           <div className="flex-1">
-            <h2 className="mb-2 font-semibold text-neutral-900 underline underline-offset-4">
-              Category
+            <h2 className="mb-2 font-semibold text-neutral-900">
+              Categories
             </h2>
             <div className="h-px bg-neutral-200" />
             

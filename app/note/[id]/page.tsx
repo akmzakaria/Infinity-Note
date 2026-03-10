@@ -75,7 +75,7 @@ export default function EditNote() {
       });
 
       if (res.ok) {
-        router.push('/');
+        router.push(`/?category=${encodeURIComponent(category)}`);
       } else {
         throw new Error('Failed to update note');
       }
