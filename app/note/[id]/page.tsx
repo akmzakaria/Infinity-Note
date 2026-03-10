@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { loadCategories } from '@/lib/categories';
+import { useToast } from '@/components/ToastProvider';
 
 interface Note {
   _id: string;
@@ -15,6 +16,7 @@ export default function EditNote() {
   const router = useRouter();
   const params = useParams();
   const noteId = params.id as string;
+  const { showToast } = useToast();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -47,7 +49,11 @@ export default function EditNote() {
       }
     } catch (error) {
       console.error('Error fetching note:', error);
-      alert('Failed to load note');
+      showToast({
+        variant: 'error',
+        title: 'Failed to load note',
+        description: 'Returning you to your notes list.',
+      });
       router.push('/');
     } finally {
       setLoading(false);
@@ -56,7 +62,11 @@ export default function EditNote() {
 
   const handleSave = async () => {
     if (!title.trim() && !content.trim()) {
-      alert('Please add a title or content');
+      showToast({
+        variant: 'warning',
+        title: 'Nothing to save',
+        description: 'Please add a title or some content before saving.',
+      });
       return;
     }
 
@@ -75,13 +85,21 @@ export default function EditNote() {
       });
 
       if (res.ok) {
+        showToast({
+          variant: 'success',
+          title: 'Note updated',
+        });
         router.push(`/?category=${encodeURIComponent(category)}`);
       } else {
         throw new Error('Failed to update note');
       }
     } catch (error) {
       console.error('Error updating note:', error);
-      alert('Failed to update note. Please try again.');
+      showToast({
+        variant: 'error',
+        title: 'Failed to update note',
+        description: 'Please try again in a moment.',
+      });
     } finally {
       setSaving(false);
     }

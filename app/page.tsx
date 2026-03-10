@@ -94,7 +94,7 @@ export default function Home() {
   };
 
   return (
-    <div className="relative flex min-h-dvh">
+    <div className="relative flex min-h-dvh bg-gradient-to-b from-slate-950/60 via-slate-950 to-slate-950">
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -104,10 +104,10 @@ export default function Home() {
         onCategorySelect={handleCategorySelect}
       />
       
-      <main className="relative flex w-full flex-1 flex-col bg-white md:ml-[280px] md:w-[calc(100%-280px)] lg:mx-auto lg:max-w-[1200px] lg:pl-[280px]">
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4">
+      <main className="relative flex w-full flex-1 flex-col bg-slate-950/40 md:ml-[280px] md:w-[calc(100%-280px)] lg:mx-auto lg:max-w-[1200px] lg:pl-[280px]">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800/60 bg-slate-950/80 px-6 py-4 backdrop-blur">
           <button
-            className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 md:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-slate-100 transition-colors hover:bg-slate-800 md:hidden"
             onClick={() => setSidebarOpen(true)}
             aria-label="Open menu"
           >
@@ -120,7 +120,7 @@ export default function Home() {
           
           <Link
             href="/profile"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-slate-100 transition-colors hover:bg-slate-800"
             aria-label="Profile"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -138,7 +138,7 @@ export default function Home() {
 
         <Link
           href={`/new?category=${encodeURIComponent(selectedCategory)}`}
-          className="fixed bottom-8 right-8 z-[100] flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-600/30 transition-transform hover:scale-110 hover:shadow-xl hover:shadow-blue-600/35 md:right-[calc(2rem+280px)] lg:right-[calc((100%-1200px)/2+2rem)]"
+          className="fixed bottom-8 right-8 z-[100] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-blue-500 via-sky-400 to-emerald-400 text-white shadow-lg shadow-blue-500/40 transition-transform hover:scale-110 hover:shadow-xl hover:shadow-emerald-400/40 md:right-[calc(2rem+280px)] lg:right-[calc((100%-1200px)/2+2rem)]"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="12" y1="5" x2="12" y2="19"></line>

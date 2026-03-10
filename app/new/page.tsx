@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { loadCategories } from '@/lib/categories';
+import { useToast } from '@/components/ToastProvider';
 
 export default function NewNote() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { showToast } = useToast();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('All');
@@ -28,7 +30,11 @@ export default function NewNote() {
 
   const handleSave = async () => {
     if (!title.trim() && !content.trim()) {
-      alert('Please add a title or content');
+      showToast({
+        variant: 'warning',
+        title: 'Nothing to save',
+        description: 'Please add a title or some content before saving.',
+      });
       return;
     }
 
@@ -47,13 +53,21 @@ export default function NewNote() {
       });
 
       if (res.ok) {
+        showToast({
+          variant: 'success',
+          title: 'Note created',
+        });
         router.push(`/?category=${encodeURIComponent(category)}`);
       } else {
         throw new Error('Failed to save note');
       }
     } catch (error) {
       console.error('Error saving note:', error);
-      alert('Failed to save note. Please try again.');
+      showToast({
+        variant: 'error',
+        title: 'Failed to save note',
+        description: 'Please try again in a moment.',
+      });
     } finally {
       setSaving(false);
     }

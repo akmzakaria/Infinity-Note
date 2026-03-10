@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useToast } from './ToastProvider';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -22,6 +23,8 @@ export default function Sidebar({
 }: SidebarProps) {
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [pendingCategory, setPendingCategory] = useState<string | null>(null);
+  const { showToast } = useToast();
   const deletableCategories = useMemo(
     () => categories.filter((c) => c !== 'All'),
     [categories]
@@ -48,22 +51,14 @@ export default function Sidebar({
 
   const handleDeleteCategory = (category: string) => {
     if (category === 'All') return;
-    const ok = confirm(`Delete category "${category}"? Notes will remain, but may not show under this filter.`);
-    if (!ok) return;
-
-    const next = categories.filter((c) => c !== category);
-    onCategoriesChange(next);
-
-    if (selectedCategory === category) {
-      onCategorySelect('All');
-    }
+    setPendingCategory(category);
   };
 
   return (
     <>
       <aside
         className={[
-          'fixed left-0 top-0 z-[999] h-dvh w-[280px] overflow-y-auto border-r border-neutral-200 bg-white transition-transform duration-300 ease-in-out',
+          'fixed left-0 top-0 z-[999] h-dvh w-[280px] overflow-y-auto border-r border-slate-800/70 bg-slate-950/90 shadow-xl shadow-black/40 backdrop-blur transition-transform duration-300 ease-in-out',
           isOpen ? 'translate-x-0' : '-translate-x-full',
           'md:translate-x-0',
         ].join(' ')}
@@ -71,19 +66,19 @@ export default function Sidebar({
         <div className="flex h-full flex-col gap-4 p-6">
           <Link
             href={`/new?category=${encodeURIComponent(selectedCategory)}`}
-            className="font-semibold text-blue-600 underline underline-offset-4 transition-colors hover:text-blue-700"
+            className="font-semibold text-sky-400 underline underline-offset-4 transition-colors hover:text-sky-300"
             onClick={onClose}
           >
             <span>New</span>
           </Link>
 
-          <div className="h-px bg-neutral-200" />
+          <div className="h-px bg-slate-800/80" />
 
           <div className="flex-1">
-            <h2 className="mb-2 font-semibold text-neutral-900">
+            <h2 className="mb-2 font-semibold text-slate-100">
               Categories
             </h2>
-            <div className="h-px bg-neutral-200" />
+            <div className="h-px bg-slate-800/80" />
             
             <nav className="mt-3 flex flex-col gap-1">
               {categories.map((category) => (
@@ -92,8 +87,8 @@ export default function Sidebar({
                     className={[
                       'flex-1 rounded-md px-4 py-3 text-left text-[16px] transition-colors',
                       selectedCategory === category
-                        ? 'bg-blue-50 font-semibold text-blue-600'
-                        : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900',
+                        ? 'bg-sky-500/20 font-semibold text-sky-300'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-white',
                     ].join(' ')}
                     onClick={() => handleCategoryClick(category)}
                   >
@@ -102,7 +97,7 @@ export default function Sidebar({
 
                   {category !== 'All' && deletableCategories.length > 0 && (
                     <button
-                      className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                      className="flex h-9 w-9 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
                       onClick={() => handleDeleteCategory(category)}
                       aria-label={`Delete category ${category}`}
                       title="Delete category"
@@ -125,23 +120,23 @@ export default function Sidebar({
             </nav>
           </div>
 
-          <div className="h-px bg-neutral-200" />
+          <div className="h-px bg-slate-800/80" />
 
           <button
-            className="rounded-md px-4 py-3 text-left text-[16px] text-neutral-600 transition-colors hover:bg-neutral-100"
+            className="rounded-md px-4 py-3 text-left text-[16px] text-slate-300 transition-colors hover:bg-slate-800"
             onClick={() => setShowNewCategory(!showNewCategory)}
           >
             New Category
           </button>
 
           {showNewCategory && (
-            <div className="flex flex-col gap-2 rounded-md bg-neutral-50 p-2">
+            <div className="flex flex-col gap-2 rounded-md bg-slate-900/80 p-2">
               <input
                 type="text"
                 placeholder="Category name"
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
-                className="rounded-md border border-neutral-200 bg-white px-3 py-2 text-[14px] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-[14px] text-slate-50 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/40"
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
                     handleNewCategory();
@@ -150,7 +145,7 @@ export default function Sidebar({
               />
               <button
                 onClick={handleNewCategory}
-                className="rounded-md bg-blue-600 px-3 py-2 text-[14px] font-semibold text-white transition-colors hover:bg-blue-700"
+                className="rounded-md bg-sky-500 px-3 py-2 text-[14px] font-semibold text-white transition-colors hover:bg-sky-400"
               >
                 Add
               </button>
@@ -158,6 +153,45 @@ export default function Sidebar({
           )}
         </div>
       </aside>
+      {pendingCategory && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-slate-900 p-6 shadow-xl shadow-black/60">
+            <h2 className="text-lg font-semibold text-slate-50">
+              Delete category &quot;{pendingCategory}&quot;?
+            </h2>
+            <p className="mt-2 text-sm text-slate-400">
+              Notes will stay in the database but may not appear under this filter.
+            </p>
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                className="rounded-md px-4 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                onClick={() => setPendingCategory(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="rounded-md bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400"
+                onClick={() => {
+                  const cat = pendingCategory;
+                  setPendingCategory(null);
+                  const next = categories.filter((c) => c !== cat);
+                  onCategoriesChange(next);
+                  if (selectedCategory === cat) {
+                    onCategorySelect('All');
+                  }
+                  showToast({
+                    variant: 'info',
+                    title: 'Category deleted',
+                    description: `"${cat}" was removed. Existing notes are unchanged.`,
+                  });
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
