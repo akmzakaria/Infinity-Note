@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { fetchCategories } from '@/lib/categories-api'
 import { useToast } from '@/components/ToastProvider'
@@ -32,29 +32,12 @@ export default function EditNote() {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [showUnsavedAlert, setShowUnsavedAlert] = useState(false)
   const [originalTitle, setOriginalTitle] = useState('')
   const [originalContent, setOriginalContent] = useState('')
   const [originalCategory, setOriginalCategory] = useState('All')
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  useEffect(() => {
-    if (noteId && user) {
-      fetchNote()
-      loadUserCategories()
-    }
-  }, [noteId, user])
-
-  const loadUserCategories = async () => {
-    try {
-      const userCategories = await fetchCategories()
-      setCategories(userCategories)
-    } catch (error) {
-      console.error('Error loading categories:', error)
-      setCategories(['All'])
-    }
-  }
-
-  const fetchNote = async () => {
+  const fetchNote = useCallback(async () => {
     try {
       const res = await authenticatedFetch(`/api/notes/${noteId}`)
       if (res.ok) {
@@ -80,18 +63,26 @@ export default function EditNote() {
     } finally {
       setLoading(false)
     }
+  }, [noteId, showToast, router])
+
+  useEffect(() => {
+    if (noteId && user) {
+      fetchNote()
+      loadUserCategories()
+    }
+  }, [fetchNote, noteId, user])
+
+  const loadUserCategories = async () => {
+    try {
+      const userCategories = await fetchCategories()
+      setCategories(userCategories)
+    } catch (error) {
+      console.error('Error loading categories:', error)
+      setCategories(['All'])
+    }
   }
 
-  const handleSave = async () => {
-    if (!title.trim() && !content.trim()) {
-      showToast({
-        variant: 'warning',
-        title: 'Nothing to save',
-        description: 'Please add a title or some content before saving.',
-      })
-      return
-    }
-
+  const updateNote = useCallback(async () => {
     setSaving(true)
     try {
       const res = await authenticatedFetch(`/api/notes/${noteId}`, {
@@ -104,47 +95,44 @@ export default function EditNote() {
       })
 
       if (res.ok) {
-        showToast({
-          variant: 'success',
-          title: 'Note updated',
-        })
-        router.push(`/?category=${encodeURIComponent(category)}`)
+        // Update original values to reflect saved state
+        setOriginalTitle(title.trim() || 'Untitled')
+        setOriginalContent(content.trim())
+        setOriginalCategory(category)
       } else {
         throw new Error('Failed to update note')
       }
     } catch (error) {
       console.error('Error updating note:', error)
-      showToast({
-        variant: 'error',
-        title: 'Failed to update note',
-        description: 'Please try again in a moment.',
-      })
     } finally {
       setSaving(false)
     }
-  }
+  }, [noteId, title, content, category])
 
-  const hasUnsavedChanges = () => {
+  const hasUnsavedChanges = useCallback(() => {
     return title !== originalTitle || content !== originalContent || category !== originalCategory
-  }
+  }, [title, originalTitle, content, originalContent, category, originalCategory])
 
-  const handleCancel = () => {
-    if (hasUnsavedChanges()) {
-      setShowUnsavedAlert(true)
-    } else {
-      router.back()
+  // Real-time saving with debouncing
+  useEffect(() => {
+    if (loading) return // Don't save while loading initial data
+
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
     }
-  }
 
-  const handleDiscardChanges = () => {
-    setShowUnsavedAlert(false)
-    router.back()
-  }
+    if (hasUnsavedChanges()) {
+      saveTimeoutRef.current = setTimeout(() => {
+        updateNote()
+      }, 1000) // Save after 1 second of inactivity
+    }
 
-  const handleSaveAndExit = async () => {
-    setShowUnsavedAlert(false)
-    await handleSave()
-  }
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [title, content, category, hasUnsavedChanges, loading, updateNote])
 
   if (loading) {
     return (
@@ -170,34 +158,43 @@ export default function EditNote() {
                 className="min-w-[200px] flex-1 bg-transparent text-2xl font-semibold text-slate-50 outline-none placeholder:font-normal placeholder:text-slate-400"
               />
 
-              <div className="relative">
-                <button
-                  className="whitespace-nowrap rounded-md border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-700 hover:text-slate-50"
-                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                >
-                  Category: {category}
-                </button>
-                {showCategoryDropdown && (
-                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[100] min-w-[180px] overflow-hidden rounded-md border border-slate-700 bg-slate-900 shadow-xl shadow-black/60">
-                    {categories.map((cat) => (
-                      <button
-                        key={cat}
-                        className={[
-                          'w-full border-b border-slate-800 px-4 py-3 text-left text-sm transition-colors last:border-b-0 hover:bg-slate-800',
-                          category === cat
-                            ? 'bg-sky-500/20 font-semibold text-sky-300'
-                            : 'text-slate-300',
-                        ].join(' ')}
-                        onClick={() => {
-                          setCategory(cat)
-                          setShowCategoryDropdown(false)
-                        }}
-                      >
-                        {cat}
-                      </button>
-                    ))}
+              <div className="flex items-center gap-3">
+                {saving && (
+                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-slate-400"></div>
+                    <span className="hidden md:inline">Saving...</span>
                   </div>
                 )}
+
+                <div className="relative">
+                  <button
+                    className="whitespace-nowrap rounded-md border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-700 hover:text-slate-50"
+                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                  >
+                    Category: {category}
+                  </button>
+                  {showCategoryDropdown && (
+                    <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[100] min-w-[180px] overflow-hidden rounded-md border border-slate-700 bg-slate-900 shadow-xl shadow-black/60">
+                      {categories.map((cat) => (
+                        <button
+                          key={cat}
+                          className={[
+                            'w-full border-b border-slate-800 px-4 py-3 text-left text-sm transition-colors last:border-b-0 hover:bg-slate-800',
+                            category === cat
+                              ? 'bg-sky-500/20 font-semibold text-sky-300'
+                              : 'text-slate-300',
+                          ].join(' ')}
+                          onClick={() => {
+                            setCategory(cat)
+                            setShowCategoryDropdown(false)
+                          }}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -208,48 +205,7 @@ export default function EditNote() {
             onChange={(e) => setContent(e.target.value)}
             className="min-h-[420px] flex-1 resize-none bg-transparent px-4 py-4 text-base leading-relaxed text-slate-100 outline-none placeholder:text-slate-400 md:min-h-[520px] md:p-6"
           />
-
-          <div className="flex justify-end gap-3 border-t border-slate-800/70 px-4 py-4 md:gap-4 md:p-6">
-            <button
-              className="rounded-md px-5 py-3 text-base text-slate-300 transition-colors hover:bg-slate-800 hover:text-slate-100"
-              onClick={handleCancel}
-            >
-              Cancel
-            </button>
-            <button
-              className="rounded-md bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-3 text-base font-semibold text-white transition-all hover:from-sky-400 hover:to-blue-500 hover:shadow-lg hover:shadow-sky-500/25 disabled:cursor-not-allowed disabled:opacity-60"
-              onClick={handleSave}
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : 'Save'}
-            </button>
-          </div>
         </div>
-
-        {showUnsavedAlert && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-4">
-            <div className="w-full max-w-md rounded-2xl bg-slate-900 p-6 shadow-xl shadow-black/60">
-              <h2 className="text-lg font-semibold text-slate-50">Save your changes?</h2>
-              <p className="mt-2 text-sm text-slate-400">
-                You have unsaved changes. Would you like to save this note before leaving?
-              </p>
-              <div className="mt-6 flex justify-end gap-3">
-                <button
-                  className="rounded-md px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-slate-100"
-                  onClick={() => setShowUnsavedAlert(false)}
-                >
-                  Keep editing
-                </button>
-                <button
-                  className="rounded-md px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                  onClick={handleDiscardChanges}
-                >
-                  Discard
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </ProtectedRoute>
   )

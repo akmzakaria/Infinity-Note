@@ -1,6 +1,10 @@
 import { auth } from './firebase'
 
 export async function authenticatedFetch(url: string, options: RequestInit = {}) {
+  if (!auth) {
+    throw new Error('Firebase auth not initialized')
+  }
+
   const user = auth.currentUser
 
   if (!user) {
