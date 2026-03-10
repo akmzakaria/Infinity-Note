@@ -1,16 +1,17 @@
-'use client';
+'use client'
 
-import { ReactNode } from 'react';
-import { ToastProvider } from './ToastProvider';
-import ServiceWorkerRegister from './ServiceWorkerRegister';
+import { ReactNode } from 'react'
+import { ToastProvider } from './ToastProvider'
+import { AuthProvider } from './AuthProvider'
+import ServiceWorkerRegister from './ServiceWorkerRegister'
 
 export default function ClientProviders({ children }: { children: ReactNode }) {
   return (
     <ToastProvider>
-      <ServiceWorkerRegister />
-      {children}
+      <AuthProvider>
+        <ServiceWorkerRegister />
+        {children}
+      </AuthProvider>
     </ToastProvider>
-  );
+  )
 }
-
-
