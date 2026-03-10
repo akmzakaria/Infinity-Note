@@ -17,9 +17,10 @@ interface NoteListProps {
   notes: Note[]
   loading: boolean
   onDelete: (id: string) => void
+  searchQuery?: string
 }
 
-export default function NoteList({ notes, loading, onDelete }: NoteListProps) {
+export default function NoteList({ notes, loading, onDelete, searchQuery = '' }: NoteListProps) {
   const { showToast } = useToast()
   const [pendingNoteId, setPendingNoteId] = useState<string | null>(null)
   const formatDate = (dateString: string) => {
@@ -61,7 +62,9 @@ export default function NoteList({ notes, loading, onDelete }: NoteListProps) {
         className="flex flex-1 items-center justify-center p-12 text-[1.1rem] text-slate-400"
         style={{ backgroundColor: '#0c1327' }}
       >
-        <p>No notes found. Create your first note!</p>
+        <p>
+          {searchQuery.trim() ? 'No results matched' : 'No notes found. Create your first note!'}
+        </p>
       </div>
     )
   }
