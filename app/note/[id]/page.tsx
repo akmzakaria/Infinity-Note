@@ -6,7 +6,12 @@ import { fetchCategories } from '@/lib/categories-api'
 import { useToast } from '@/components/ToastProvider'
 import { authenticatedFetch } from '@/lib/api'
 import { useAuth } from '@/components/AuthProvider'
-import { getOfflineNoteById, updateOfflineNote, getOfflineCategories } from '@/lib/offline-storage'
+import {
+  getOfflineNoteById,
+  updateOfflineNote,
+  getOfflineCategories,
+  deleteOfflineNote,
+} from '@/lib/offline-storage'
 
 // Prevent this page from being prerendered during build
 export const dynamic = 'force-dynamic'
@@ -37,6 +42,24 @@ export default function EditNote() {
   const [originalCategory, setOriginalCategory] = useState('All')
   const [isOffline, setIsOffline] = useState(false)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const categoryDropdownRef = useRef<HTMLDivElement>(null)
+
+  // Handle click outside category dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        categoryDropdownRef.current &&
+        !categoryDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowCategoryDropdown(false)
+      }
+    }
+
+    if (showCategoryDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showCategoryDropdown])
 
   const fetchNote = useCallback(async () => {
     try {
@@ -105,6 +128,24 @@ export default function EditNote() {
   }, [fetchNote, noteId, loadCategories])
 
   const updateNote = useCallback(async () => {
+    // If note becomes completely empty, delete it
+    if (!title.trim() && !content.trim()) {
+      try {
+        if (user && !isOffline) {
+          // Delete from server
+          await authenticatedFetch(`/api/notes/${noteId}`, { method: 'DELETE' })
+        } else {
+          // Delete from offline storage
+          deleteOfflineNote(noteId)
+        }
+        // Navigate back to home
+        router.push('/?category=All')
+      } catch (error) {
+        console.error('Error deleting note:', error)
+      }
+      return
+    }
+
     setSaving(true)
     try {
       if (user && !isOffline) {
@@ -144,7 +185,7 @@ export default function EditNote() {
     } finally {
       setSaving(false)
     }
-  }, [noteId, title, content, category, user, isOffline])
+  }, [noteId, title, content, category, user, isOffline, router])
 
   const hasUnsavedChanges = useCallback(() => {
     return title !== originalTitle || content !== originalContent || category !== originalCategory
@@ -210,7 +251,7 @@ export default function EditNote() {
                 </div>
               )}
 
-              <div className="relative">
+              <div className="relative" ref={categoryDropdownRef}>
                 <button
                   className="whitespace-nowrap rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-700 hover:text-slate-50 md:px-4"
                   onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}

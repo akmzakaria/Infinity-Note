@@ -88,14 +88,21 @@ function HomeContent() {
     const controller = new AbortController()
 
     const run = async () => {
+      // Get category directly from URL to avoid stale state
+      const categoryFromUrl = searchParams.get('category')
+      if (!categoryFromUrl) return
+
       setLoading(true)
+      // Clear notes immediately to prevent flash of wrong category
+      setNotes([])
+
       try {
         if (user) {
           // User is logged in - fetch from server
           const url =
-            selectedCategory === 'All'
+            categoryFromUrl === 'All'
               ? '/api/notes'
-              : `/api/notes?category=${encodeURIComponent(selectedCategory)}`
+              : `/api/notes?category=${encodeURIComponent(categoryFromUrl)}`
           const res = await authenticatedFetch(url, { signal: controller.signal })
 
           if (!res.ok) {
@@ -107,9 +114,9 @@ function HomeContent() {
         } else {
           // User is offline - use localStorage
           const offlineNotes =
-            selectedCategory === 'All'
+            categoryFromUrl === 'All'
               ? getOfflineNotes()
-              : getOfflineNotesByCategory(selectedCategory)
+              : getOfflineNotesByCategory(categoryFromUrl)
 
           // Convert offline notes to match the Note interface
           const convertedNotes = offlineNotes.map((note) => ({
@@ -128,9 +135,9 @@ function HomeContent() {
           console.error('Error fetching notes:', error)
           // Fallback to offline notes
           const offlineNotes =
-            selectedCategory === 'All'
+            categoryFromUrl === 'All'
               ? getOfflineNotes()
-              : getOfflineNotesByCategory(selectedCategory)
+              : getOfflineNotesByCategory(categoryFromUrl)
 
           const convertedNotes = offlineNotes.map((note) => ({
             _id: note.id,
@@ -158,7 +165,7 @@ function HomeContent() {
 
     run()
     return () => controller.abort()
-  }, [selectedCategory, refreshKey, user, showToast])
+  }, [searchParams, refreshKey, user, showToast])
 
   // Load categories
   useEffect(() => {
@@ -194,11 +201,10 @@ function HomeContent() {
   useEffect(() => {
     if (categoriesLoading) return
     const fromQuery = searchParams.get('category')
-    if (fromQuery && categories.includes(fromQuery) && fromQuery !== selectedCategory) {
+    if (fromQuery && categories.includes(fromQuery)) {
       setSelectedCategory(fromQuery)
-      return
     }
-  }, [searchParams, categories, selectedCategory, categoriesLoading])
+  }, [searchParams, categories, categoriesLoading])
 
   // Handle click outside profile dropdown
   useEffect(() => {

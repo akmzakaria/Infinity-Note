@@ -6,7 +6,14 @@ import { useSearchParams } from 'next/navigation'
 import { fetchCategories } from '@/lib/categories-api'
 import { authenticatedFetch } from '@/lib/api'
 import { useAuth } from '@/components/AuthProvider'
-import { saveOfflineNote, updateOfflineNote, getOfflineCategories } from '@/lib/offline-storage'
+import {
+  getOfflineNotes,
+  getOfflineNotesByCategory,
+  getOfflineCategories,
+  saveOfflineNote,
+  updateOfflineNote,
+  deleteOfflineNote,
+} from '@/lib/offline-storage'
 
 function NewNoteContent() {
   const searchParams = useSearchParams()
@@ -20,6 +27,24 @@ function NewNoteContent() {
   const [noteId, setNoteId] = useState<string | null>(null)
   const [isOffline, setIsOffline] = useState(false)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const categoryDropdownRef = useRef<HTMLDivElement>(null)
+
+  // Handle click outside category dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        categoryDropdownRef.current &&
+        !categoryDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowCategoryDropdown(false)
+      }
+    }
+
+    if (showCategoryDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showCategoryDropdown])
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -102,7 +127,8 @@ function NewNoteContent() {
   )
 
   const saveNoteOffline = useCallback(() => {
-    if (!title.trim() && !content.trim()) return null
+    // For new notes, don't create if completely empty
+    if (!noteId && !title.trim() && !content.trim()) return null
 
     if (!noteId) {
       // Create new offline note
@@ -113,7 +139,7 @@ function NewNoteContent() {
       })
       return newNote.id
     } else {
-      // Update existing offline note
+      // Update existing offline note (allow empty content)
       updateOfflineNote(noteId, {
         title: title.trim() || 'Untitled',
         content: content.trim(),
@@ -124,7 +150,26 @@ function NewNoteContent() {
   }, [title, content, category, noteId])
 
   const debouncedSave = useCallback(async () => {
-    if (!title.trim() && !content.trim()) return
+    // If existing note becomes completely empty, delete it
+    if (noteId && !title.trim() && !content.trim()) {
+      try {
+        if (user && !isOffline) {
+          // Delete from server
+          await authenticatedFetch(`/api/notes/${noteId}`, { method: 'DELETE' })
+        } else {
+          // Delete from offline storage
+          deleteOfflineNote(noteId)
+        }
+        // Navigate back to home
+        window.history.back()
+      } catch (error) {
+        console.error('Error deleting note:', error)
+      }
+      return
+    }
+
+    // Only skip save if this is a new note with no content
+    if (!noteId && !title.trim() && !content.trim()) return
 
     setSaving(true)
     try {
@@ -158,7 +203,9 @@ function NewNoteContent() {
       clearTimeout(saveTimeoutRef.current)
     }
 
-    if (title.trim() || content.trim()) {
+    // Always trigger save if noteId exists (editing existing note)
+    // For new notes, only save if there's content
+    if (noteId || title.trim() || content.trim()) {
       saveTimeoutRef.current = setTimeout(() => {
         debouncedSave()
       }, 1000) // Save after 1 second of inactivity
@@ -169,7 +216,7 @@ function NewNoteContent() {
         clearTimeout(saveTimeoutRef.current)
       }
     }
-  }, [title, content, category, debouncedSave])
+  }, [title, content, category, noteId, debouncedSave])
 
   return (
     <div className="min-h-dvh bg-gradient-to-b from-slate-950/60 via-slate-950 to-slate-950 md:flex md:items-center md:justify-center md:p-8">
@@ -199,7 +246,7 @@ function NewNoteContent() {
                 </div>
               )}
 
-              <div className="relative">
+              <div className="relative" ref={categoryDropdownRef}>
                 <button
                   className="whitespace-nowrap rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-700 hover:text-slate-50 md:px-4"
                   onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
