@@ -191,6 +191,30 @@ export default function EditNote() {
     return title !== originalTitle || content !== originalContent || category !== originalCategory
   }, [title, originalTitle, content, originalContent, category, originalCategory])
 
+  // Delete note with no content when navigating back
+  useEffect(() => {
+    const handlePopState = () => {
+      // Delete if note has no content (title-only notes are not useful)
+      if (!contentRef.current.trim()) {
+        if (user && !isOffline) {
+          authenticatedFetch(`/api/notes/${noteId}`, { method: 'DELETE' }).catch(console.error)
+        } else {
+          deleteOfflineNote(noteId)
+        }
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('noteDeleted', 'true')
+        }
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noteId, user, isOffline])
+
   // Real-time saving with debouncing
   useEffect(() => {
     if (loading) return
