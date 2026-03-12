@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Disable page transitions */
+* {
+  view-transition-name: none !important;
+}
+
 /* Small app-specific defaults */
 html,
 body {

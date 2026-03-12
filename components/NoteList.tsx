@@ -80,7 +80,11 @@ export default function NoteList({ notes, loading, onDelete, searchQuery = '' }:
             key={note._id}
             className="group relative cursor-pointer rounded-2xl border border-slate-800/60 bg-slate-900/80 p-5 shadow-sm shadow-black/40 transition-transform transition-shadow duration-200 hover:-translate-y-0.5 hover:shadow-lg md:p-6"
           >
-            <Link href={`/note/${note._id}`} className="block text-inherit no-underline">
+            <Link
+              href={`/note/${note._id}`}
+              className="block text-inherit no-underline"
+              prefetch={true}
+            >
               <div className="mb-3 flex items-start justify-between gap-4">
                 <h3 className="m-0 flex-1 text-xl font-semibold text-slate-50">
                   {note.title || 'Untitled'}

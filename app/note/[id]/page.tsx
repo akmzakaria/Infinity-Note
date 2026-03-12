@@ -12,6 +12,7 @@ import {
   getOfflineCategories,
   deleteOfflineNote,
 } from '@/lib/offline-storage'
+import { useNotesCache } from '@/components/NotesProvider'
 
 // Prevent this page from being prerendered during build
 export const dynamic = 'force-dynamic'
@@ -29,6 +30,7 @@ export default function EditNote() {
   const noteId = params.id as string
   const { user } = useAuth()
   const { showToast } = useToast()
+  const { getNoteFromCache } = useNotesCache()
 
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -62,6 +64,18 @@ export default function EditNote() {
   }, [showCategoryDropdown])
 
   const fetchNote = useCallback(async () => {
+    // Try cache first for instant loading
+    const cachedNote = getNoteFromCache(noteId)
+    if (cachedNote) {
+      setTitle(cachedNote.title)
+      setContent(cachedNote.content)
+      setCategory(cachedNote.category)
+      setOriginalTitle(cachedNote.title)
+      setOriginalContent(cachedNote.content)
+      setOriginalCategory(cachedNote.category)
+      setLoading(false)
+    }
+
     try {
       if (user) {
         // Try to fetch from server first
@@ -74,6 +88,7 @@ export default function EditNote() {
           setOriginalTitle(note.title)
           setOriginalContent(note.content)
           setOriginalCategory(note.category)
+          setLoading(false)
           return
         }
       }
@@ -88,21 +103,23 @@ export default function EditNote() {
         setOriginalContent(offlineNote.content)
         setOriginalCategory(offlineNote.category)
         setIsOffline(true)
-      } else {
+      } else if (!cachedNote) {
         throw new Error('Note not found')
       }
     } catch (error) {
-      console.error('Error fetching note:', error)
-      showToast({
-        variant: 'error',
-        title: 'Failed to load note',
-        description: 'Returning you to your notes list.',
-      })
-      router.push('/')
+      if (!cachedNote) {
+        console.error('Error fetching note:', error)
+        showToast({
+          variant: 'error',
+          title: 'Failed to load note',
+          description: 'Returning you to your notes list.',
+        })
+        router.push('/')
+      }
     } finally {
       setLoading(false)
     }
-  }, [noteId, user, showToast, router])
+  }, [noteId, user, showToast, router, getNoteFromCache])
 
   const loadCategories = useCallback(async () => {
     try {

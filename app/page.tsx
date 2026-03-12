@@ -9,6 +9,7 @@ import { fetchCategories, createCategory, deleteCategory } from '@/lib/categorie
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { useToast } from '@/components/ToastProvider'
+import { useNotesCache } from '@/components/NotesProvider'
 import { authenticatedFetch } from '@/lib/api'
 import {
   getOfflineNotes,
@@ -44,6 +45,7 @@ function HomeContent() {
   const searchParams = useSearchParams()
   const { user, logout, loading: authLoading } = useAuth()
   const { showToast } = useToast()
+  const { setNoteInCache } = useNotesCache()
   const [notes, setNotes] = useState<Note[]>([])
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [categories, setCategories] = useState<string[]>(['All'])
@@ -110,7 +112,11 @@ function HomeContent() {
           }
 
           const data = await res.json()
-          if (fetchSeq.current === currentSeq) setNotes(data)
+          if (fetchSeq.current === currentSeq) {
+            setNotes(data)
+            // Cache all notes
+            data.forEach((note: Note) => setNoteInCache(note))
+          }
         } else {
           // User is offline - use localStorage
           const offlineNotes =
@@ -128,7 +134,11 @@ function HomeContent() {
             updatedAt: note.updatedAt,
           }))
 
-          if (fetchSeq.current === currentSeq) setNotes(convertedNotes)
+          if (fetchSeq.current === currentSeq) {
+            setNotes(convertedNotes)
+            // Cache all notes
+            convertedNotes.forEach((note) => setNoteInCache(note))
+          }
         }
       } catch (error) {
         if ((error as any)?.name !== 'AbortError') {
@@ -148,7 +158,11 @@ function HomeContent() {
             updatedAt: note.updatedAt,
           }))
 
-          if (fetchSeq.current === currentSeq) setNotes(convertedNotes)
+          if (fetchSeq.current === currentSeq) {
+            setNotes(convertedNotes)
+            // Cache all notes
+            convertedNotes.forEach((note) => setNoteInCache(note))
+          }
 
           if (user) {
             showToast({
@@ -165,7 +179,7 @@ function HomeContent() {
 
     run()
     return () => controller.abort()
-  }, [searchParams, refreshKey, user, showToast])
+  }, [searchParams, refreshKey, user, showToast, setNoteInCache])
 
   // Load categories
   useEffect(() => {
@@ -511,6 +525,7 @@ function HomeContent() {
         <Link
           href={`/new?category=${encodeURIComponent(selectedCategory)}`}
           className="fixed bottom-8 right-6 z-[100] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-blue-500 via-sky-400 to-emerald-400 text-white shadow-lg shadow-blue-500/40 transition-transform hover:scale-110 hover:shadow-xl hover:shadow-emerald-400/40 md:bottom-16 md:right-[100px]"
+          prefetch={true}
         >
           <svg
             width="24"
