@@ -165,8 +165,8 @@ export default function EditNote() {
           // Delete from offline storage
           deleteOfflineNote(noteId)
         }
-        // Navigate back to home
-        router.push('/?category=All')
+        // Navigate back to the category we came from
+        router.push(`/?category=${encodeURIComponent(fromCategory)}`)
       } catch (error) {
         console.error('Error deleting note:', error)
       }

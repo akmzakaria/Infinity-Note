@@ -59,19 +59,23 @@ function NewNoteContent() {
   useEffect(() => {
     const loadCategories = async () => {
       try {
+        let loadedCategories: string[] = ['All']
+
         if (user) {
           // User is logged in - fetch from server
           const userCategories = await fetchCategories()
           setCategories(userCategories)
+          loadedCategories = userCategories
         } else {
           // User is offline - use localStorage
           const offlineCategories = getOfflineCategories()
           setCategories(offlineCategories)
+          loadedCategories = offlineCategories
           setIsOffline(true)
         }
 
         const fromQuery = searchParams.get('category')
-        if (fromQuery && categories.includes(fromQuery)) {
+        if (fromQuery && loadedCategories.includes(fromQuery)) {
           setCategory(fromQuery)
         } else {
           setCategory('All')
@@ -87,7 +91,7 @@ function NewNoteContent() {
     }
 
     loadCategories()
-  }, [user, searchParams, categories])
+  }, [user, searchParams])
 
   const createNoteOnline = useCallback(async () => {
     if (!title.trim() && !content.trim()) return null
