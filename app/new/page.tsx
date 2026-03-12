@@ -207,33 +207,6 @@ function NewNoteContent() {
     }
   }, [title, content, noteId, user, isOffline, createNoteOnline, updateNoteOnline, saveNoteOffline])
 
-  // Delete note with no content when navigating back
-  useEffect(() => {
-    const handlePopState = () => {
-      const currentNoteId = noteIdRef.current
-      // Delete if note has no content (title-only notes are not useful)
-      if (currentNoteId && !contentRef.current.trim()) {
-        if (user && !isOffline) {
-          authenticatedFetch(`/api/notes/${currentNoteId}`, { method: 'DELETE' }).catch(
-            console.error
-          )
-        } else {
-          deleteOfflineNote(currentNoteId)
-        }
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('noteDeleted', 'true')
-        }
-      }
-    }
-
-    window.addEventListener('popstate', handlePopState)
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isOffline])
-
   // Real-time saving with debouncing
   useEffect(() => {
     if (saveTimeoutRef.current) {

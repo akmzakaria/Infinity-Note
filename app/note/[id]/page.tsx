@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { fetchCategories } from '@/lib/categories-api'
 import { useToast } from '@/components/ToastProvider'
 import { authenticatedFetch } from '@/lib/api'
@@ -27,7 +27,9 @@ interface Note {
 export default function EditNote() {
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const noteId = params.id as string
+  const fromCategory = searchParams.get('from') || 'All'
   const { user } = useAuth()
   const { showToast } = useToast()
   const { getNoteFromCache } = useNotesCache()
@@ -215,30 +217,6 @@ export default function EditNote() {
   const hasUnsavedChanges = useCallback(() => {
     return title !== originalTitle || content !== originalContent || category !== originalCategory
   }, [title, originalTitle, content, originalContent, category, originalCategory])
-
-  // Delete note with no content when navigating back
-  useEffect(() => {
-    const handlePopState = () => {
-      // Delete if note has no content (title-only notes are not useful)
-      if (!contentRef.current.trim()) {
-        if (user && !isOffline) {
-          authenticatedFetch(`/api/notes/${noteId}`, { method: 'DELETE' }).catch(console.error)
-        } else {
-          deleteOfflineNote(noteId)
-        }
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('noteDeleted', 'true')
-        }
-      }
-    }
-
-    window.addEventListener('popstate', handlePopState)
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noteId, user, isOffline])
 
   // Real-time saving with debouncing
   useEffect(() => {

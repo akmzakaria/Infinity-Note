@@ -18,9 +18,16 @@ interface NoteListProps {
   loading: boolean
   onDelete: (id: string) => void
   searchQuery?: string
+  currentCategory?: string
 }
 
-export default function NoteList({ notes, loading, onDelete, searchQuery = '' }: NoteListProps) {
+export default function NoteList({
+  notes,
+  loading,
+  onDelete,
+  searchQuery = '',
+  currentCategory = 'All',
+}: NoteListProps) {
   const { showToast } = useToast()
   const [pendingNoteId, setPendingNoteId] = useState<string | null>(null)
   const formatDate = (dateString: string) => {
@@ -70,7 +77,7 @@ export default function NoteList({ notes, loading, onDelete, searchQuery = '' }:
             className="group relative cursor-pointer rounded-2xl border border-slate-800/60 bg-slate-900/80 p-5 shadow-sm shadow-black/40 transition-transform transition-shadow duration-200 hover:-translate-y-0.5 hover:shadow-lg md:p-6"
           >
             <Link
-              href={`/note/${note._id}`}
+              href={`/note/${note._id}?from=${encodeURIComponent(currentCategory)}`}
               className="block text-inherit no-underline"
               prefetch={true}
             >

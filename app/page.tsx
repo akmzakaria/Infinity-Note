@@ -46,8 +46,15 @@ function HomeContent() {
   const { user, logout, loading: authLoading } = useAuth()
   const { showToast } = useToast()
   const { setNoteInCache, setNotesByCategory, getNotesByCategory } = useNotesCache()
+
+  // Initialize selectedCategory from URL or sessionStorage to prevent flash
+  const initialCategory =
+    searchParams.get('category') ||
+    (typeof window !== 'undefined' ? sessionStorage.getItem('lastCategory') : null) ||
+    'All'
+
   const [notes, setNotes] = useState<Note[]>([])
-  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory)
   const [categories, setCategories] = useState<string[]>(['All'])
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -73,15 +80,22 @@ function HomeContent() {
     if (authLoading) return
 
     const category = searchParams.get('category')
-    if (!category) {
+    // Only redirect if truly no category (not just empty string)
+    if (category === null || category === undefined) {
+      // Check if we have a stored last category
+      const lastCategory = sessionStorage.getItem('lastCategory') || 'All'
+
       if (user) {
-        // User is logged in - redirect to All category page
-        router.push('/?category=All')
+        // User is logged in - redirect to last viewed category
+        router.replace(`/?category=${encodeURIComponent(lastCategory)}`)
       } else {
         // User is not logged in - redirect to login page
-        router.push('/login')
+        router.replace('/login')
       }
       return
+    } else {
+      // Store the current category
+      sessionStorage.setItem('lastCategory', category)
     }
   }, [router, searchParams, user, authLoading])
 
@@ -349,7 +363,7 @@ function HomeContent() {
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category)
-    router.replace(`/?category=${encodeURIComponent(category)}`)
+    router.push(`/?category=${encodeURIComponent(category)}`)
   }
 
   const handleDeleteNote = async (id: string) => {
@@ -538,6 +552,7 @@ function HomeContent() {
           loading={loading}
           onDelete={handleDeleteNote}
           searchQuery={searchQuery}
+          currentCategory={selectedCategory}
         />
 
         <Link
