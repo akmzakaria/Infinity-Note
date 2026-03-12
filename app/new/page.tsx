@@ -28,6 +28,16 @@ function NewNoteContent() {
   const [isOffline, setIsOffline] = useState(false)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const categoryDropdownRef = useRef<HTMLDivElement>(null)
+  const titleRef = useRef(title)
+  const contentRef = useRef(content)
+  const noteIdRef = useRef(noteId)
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    titleRef.current = title
+    contentRef.current = content
+    noteIdRef.current = noteId
+  }, [title, content, noteId])
 
   // Handle click outside category dropdown
   useEffect(() => {

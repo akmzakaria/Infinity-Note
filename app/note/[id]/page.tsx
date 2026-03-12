@@ -45,6 +45,14 @@ export default function EditNote() {
   const [isOffline, setIsOffline] = useState(false)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const categoryDropdownRef = useRef<HTMLDivElement>(null)
+  const titleRef = useRef(title)
+  const contentRef = useRef(content)
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    titleRef.current = title
+    contentRef.current = content
+  }, [title, content])
 
   // Handle click outside category dropdown
   useEffect(() => {

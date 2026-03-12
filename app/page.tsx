@@ -45,7 +45,7 @@ function HomeContent() {
   const searchParams = useSearchParams()
   const { user, logout, loading: authLoading } = useAuth()
   const { showToast } = useToast()
-  const { setNoteInCache } = useNotesCache()
+  const { setNoteInCache, setNotesByCategory, getNotesByCategory } = useNotesCache()
   const [notes, setNotes] = useState<Note[]>([])
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [categories, setCategories] = useState<string[]>(['All'])
@@ -94,9 +94,13 @@ function HomeContent() {
       const categoryFromUrl = searchParams.get('category')
       if (!categoryFromUrl) return
 
+      // Load from cache first for instant display
+      const cachedNotes = getNotesByCategory(categoryFromUrl)
+      if (cachedNotes) {
+        setNotes(cachedNotes)
+      }
+
       setLoading(true)
-      // Clear notes immediately to prevent flash of wrong category
-      setNotes([])
 
       try {
         if (user) {
@@ -116,6 +120,8 @@ function HomeContent() {
             setNotes(data)
             // Cache all notes
             data.forEach((note: Note) => setNoteInCache(note))
+            // Cache notes by category
+            setNotesByCategory(categoryFromUrl, data)
           }
         } else {
           // User is offline - use localStorage
@@ -138,6 +144,8 @@ function HomeContent() {
             setNotes(convertedNotes)
             // Cache all notes
             convertedNotes.forEach((note) => setNoteInCache(note))
+            // Cache notes by category
+            setNotesByCategory(categoryFromUrl, convertedNotes)
           }
         }
       } catch (error) {
@@ -162,6 +170,8 @@ function HomeContent() {
             setNotes(convertedNotes)
             // Cache all notes
             convertedNotes.forEach((note) => setNoteInCache(note))
+            // Cache notes by category
+            setNotesByCategory(categoryFromUrl, convertedNotes)
           }
 
           if (user) {
@@ -179,7 +189,15 @@ function HomeContent() {
 
     run()
     return () => controller.abort()
-  }, [searchParams, refreshKey, user, showToast, setNoteInCache])
+  }, [
+    searchParams,
+    refreshKey,
+    user,
+    showToast,
+    setNoteInCache,
+    getNotesByCategory,
+    setNotesByCategory,
+  ])
 
   // Load categories
   useEffect(() => {

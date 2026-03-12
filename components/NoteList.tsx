@@ -45,18 +45,7 @@ export default function NoteList({ notes, loading, onDelete, searchQuery = '' }:
     return content.substring(0, maxLength) + '...'
   }
 
-  if (loading) {
-    return (
-      <div
-        className="flex flex-1 items-center justify-center p-12"
-        style={{ backgroundColor: '#0c1327' }}
-      >
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-600 border-t-sky-400"></div>
-      </div>
-    )
-  }
-
-  if (notes.length === 0) {
+  if (notes.length === 0 && !loading) {
     return (
       <div
         className="flex flex-1 items-center justify-center p-12 text-[1.1rem] text-slate-400"
