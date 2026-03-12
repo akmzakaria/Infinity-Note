@@ -117,6 +117,10 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
+  // For Capacitor build, we need to handle images properly
+  images: {
+    unoptimized: true,
+  },
 }
 
 module.exports = withPWA(nextConfig)

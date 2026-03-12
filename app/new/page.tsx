@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react'
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { fetchCategories } from '@/lib/categories-api'
 import { authenticatedFetch } from '@/lib/api'
 import { useAuth } from '@/components/AuthProvider'
@@ -14,10 +14,13 @@ import {
   updateOfflineNote,
   deleteOfflineNote,
 } from '@/lib/offline-storage'
+import { useCapacitor } from '@/hooks/useCapacitor'
 
 function NewNoteContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const { user } = useAuth()
+  const { isCapacitor } = useCapacitor()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [category, setCategory] = useState('All')
@@ -233,7 +236,9 @@ function NewNoteContent() {
   }, [title, content, category, noteId, debouncedSave])
 
   return (
-    <div className="min-h-dvh bg-gradient-to-b from-slate-950/60 via-slate-950 to-slate-950 md:flex md:items-center md:justify-center md:p-8">
+    <div
+      className={`min-h-dvh bg-gradient-to-b from-slate-950/60 via-slate-950 to-slate-950 md:flex md:items-center md:justify-center md:p-8 ${isCapacitor ? 'mt-5' : 'md:mt-0'}`}
+    >
       <div className="flex min-h-dvh w-full flex-col bg-slate-900/80 backdrop-blur md:min-h-[700px] md:max-w-[900px] md:rounded-xl md:shadow-xl md:shadow-black/40 md:ring-1 md:ring-slate-800/70">
         <div className="border-b border-slate-800/70 px-4 py-4 md:p-6">
           <div className="flex items-center justify-between gap-3 md:gap-4">
@@ -290,6 +295,28 @@ function NewNoteContent() {
                   </div>
                 )}
               </div>
+
+              <button
+                className="flex h-10 w-10 items-center justify-center rounded-full text-slate-100 transition-colors hover:bg-slate-800"
+                onClick={async () => {
+                  // Force save the note
+                  await debouncedSave()
+                  // Navigate back to the current category
+                  router.push(`/?category=${encodeURIComponent(category)}`)
+                }}
+                title="Save and go back"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </button>
             </div>
           </div>
         </div>

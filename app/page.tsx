@@ -20,6 +20,7 @@ import {
   deleteOfflineNote,
 } from '@/lib/offline-storage'
 import { syncOfflineDataToServer, shouldShowSyncPrompt } from '@/lib/sync'
+import { useCapacitor } from '@/hooks/useCapacitor'
 
 interface Note {
   _id: string
@@ -46,6 +47,7 @@ function HomeContent() {
   const { user, logout, loading: authLoading } = useAuth()
   const { showToast } = useToast()
   const { setNoteInCache, setNotesByCategory, getNotesByCategory } = useNotesCache()
+  const { isCapacitor, isAndroid } = useCapacitor()
 
   // Initialize selectedCategory from URL or sessionStorage to prevent flash
   const initialCategory =
@@ -85,13 +87,8 @@ function HomeContent() {
       // Check if we have a stored last category
       const lastCategory = sessionStorage.getItem('lastCategory') || 'All'
 
-      if (user) {
-        // User is logged in - redirect to last viewed category
-        router.replace(`/?category=${encodeURIComponent(lastCategory)}`)
-      } else {
-        // User is not logged in - redirect to login page
-        router.replace('/login')
-      }
+      // Always redirect to All category (or last viewed category) regardless of auth status
+      router.replace(`/?category=${encodeURIComponent(lastCategory)}`)
       return
     } else {
       // Store the current category
@@ -430,7 +427,10 @@ function HomeContent() {
   }
 
   return (
-    <div className="relative flex min-h-dvh" style={{ backgroundColor: '#0c1327' }}>
+    <div
+      className={`relative flex min-h-dvh ${isCapacitor ? 'mt-5' : 'md:mt-0'}`}
+      style={{ backgroundColor: '#0c1327' }}
+    >
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}

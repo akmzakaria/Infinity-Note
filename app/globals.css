@@ -18,3 +18,15 @@ body {
   @apply text-slate-50 antialiased;
   background-color: #0c1327; /* Ensure consistent background */
 }
+
+/* Capacitor-specific styles */
+.capacitor-safe-area {
+  margin-top: 0;
+}
+
+/* Apply top margin only in Capacitor WebView */
+@media (display-mode: standalone) {
+  .capacitor-safe-area {
+    margin-top: 1.25rem; /* 20px - equivalent to mt-5 */
+  }
+}
