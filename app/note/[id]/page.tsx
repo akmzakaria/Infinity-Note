@@ -197,6 +197,8 @@ export default function EditNote() {
         }
       } else {
         // Update offline
+        // Add small delay to show saving indicator
+        await new Promise((resolve) => setTimeout(resolve, 300))
         const updatedNote = updateOfflineNote(noteId, {
           title: title.trim() || 'Untitled',
           content: content.trim(),
@@ -272,13 +274,6 @@ export default function EditNote() {
                 <div className="flex items-center gap-2 text-sm text-slate-400">
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-slate-400"></div>
                   <span className="hidden md:inline">Saving...</span>
-                </div>
-              )}
-
-              {isOffline && (
-                <div className="flex items-center gap-2 text-xs text-amber-400">
-                  <div className="h-2 w-2 rounded-full bg-amber-400"></div>
-                  <span className="hidden md:inline">Offline</span>
                 </div>
               )}
 

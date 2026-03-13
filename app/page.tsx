@@ -468,33 +468,26 @@ function HomeContent() {
           </button>
 
           <div className="flex-1 flex items-center justify-center px-4">
-            {user ? (
-              <div className="w-full max-w-md">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search notes..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full rounded-md border border-slate-700 bg-slate-800/50 px-4 py-2 pl-10 text-sm text-slate-100 outline-none placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/40"
-                  />
-                  <svg
-                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                  </svg>
-                </div>
+            <div className="w-full max-w-md">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search notes..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-md border border-slate-700 bg-slate-800/50 px-4 py-2 pl-10 text-sm text-slate-100 outline-none placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/40"
+                />
+                <svg
+                  className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
               </div>
-            ) : (
-              <div className="flex items-center gap-2 text-xs text-amber-400">
-                <div className="h-2 w-2 rounded-full bg-amber-400"></div>
-                <span className="md:inline">Working offline</span>
-              </div>
-            )}
+            </div>
           </div>
 
           <div className="flex items-center gap-3">

@@ -23,7 +23,12 @@ export function getOfflineNotes(): OfflineNote[] {
 
   try {
     const notes = localStorage.getItem(NOTES_KEY)
-    return notes ? JSON.parse(notes) : []
+    const parsedNotes = notes ? JSON.parse(notes) : []
+    // Sort by createdAt descending (newest first)
+    return parsedNotes.sort(
+      (a: OfflineNote, b: OfflineNote) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
   } catch (error) {
     console.error('Error reading offline notes:', error)
     return []
@@ -86,7 +91,7 @@ export function getOfflineNoteById(id: string): OfflineNote | null {
 }
 
 export function getOfflineNotesByCategory(category: string): OfflineNote[] {
-  const notes = getOfflineNotes()
+  const notes = getOfflineNotes() // Already sorted by getOfflineNotes()
   if (category === 'All') return notes
   return notes.filter((note) => note.category === category)
 }
