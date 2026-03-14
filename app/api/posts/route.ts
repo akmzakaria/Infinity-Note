@@ -28,23 +28,28 @@ export async function GET(request: NextRequest) {
       let currentlyActivePostId = null
 
       if (publishedPosts.length > 0) {
-        // First check if any post is manually set as live
-        const manuallyLivePost = publishedPosts.find((post) => post.isCurrentlyLive)
+        // First check if any post is manually set as live and still within 24 hours
+        const manuallyLivePost = publishedPosts.find((post) => {
+          if (!post.isCurrentlyLive) return false
+
+          // Check if manual override is still valid (within 24 hours)
+          const now = Date.now()
+          const postUpdatedTime = new Date(post.updatedAt).getTime()
+          const hoursSinceUpdate = (now - postUpdatedTime) / (1000 * 60 * 60)
+
+          return hoursSinceUpdate < 24 // Manual override valid for 24 hours
+        })
 
         if (manuallyLivePost) {
           currentlyActivePostId = manuallyLivePost._id.toString()
         } else {
-          // Fall back to automatic rotation
-          const newestPublishedDate = new Date(
-            publishedPosts[publishedPosts.length - 1].publishedAt
-          ).getTime()
+          // Fall back to cycling rotation (1,2,3,4,5,1,2,3...)
+          const firstPublishedDate = new Date(publishedPosts[0].publishedAt).getTime()
           const now = Date.now()
-          const daysPassed = Math.floor((now - newestPublishedDate) / (1000 * 60 * 60 * 24))
-          const currentPostIndex = publishedPosts.length - 1 - daysPassed
+          const daysPassed = Math.floor((now - firstPublishedDate) / (1000 * 60 * 60 * 24))
+          const currentPostIndex = daysPassed % publishedPosts.length
 
-          if (currentPostIndex >= 0) {
-            currentlyActivePostId = publishedPosts[currentPostIndex]._id.toString()
-          }
+          currentlyActivePostId = publishedPosts[currentPostIndex]._id.toString()
         }
       }
 
@@ -67,27 +72,29 @@ export async function GET(request: NextRequest) {
         return NextResponse.json([])
       }
 
-      // First check if any post is manually set as live
-      const manuallyLivePost = publishedPosts.find((post) => post.isCurrentlyLive)
+      // First check if any post is manually set as live and still within 24 hours
+      const manuallyLivePost = publishedPosts.find((post) => {
+        if (!post.isCurrentlyLive) return false
+
+        // Check if manual override is still valid (within 24 hours)
+        const now = Date.now()
+        const postUpdatedTime = new Date(post.updatedAt).getTime()
+        const hoursSinceUpdate = (now - postUpdatedTime) / (1000 * 60 * 60)
+
+        return hoursSinceUpdate < 24 // Manual override valid for 24 hours
+      })
 
       if (manuallyLivePost) {
         return NextResponse.json([manuallyLivePost])
       }
 
-      // Fall back to automatic rotation
-      const newestPublishedDate = new Date(
-        publishedPosts[publishedPosts.length - 1].publishedAt
-      ).getTime()
+      // Fall back to cycling rotation (1,2,3,4,5,1,2,3...)
+      const firstPublishedDate = new Date(publishedPosts[0].publishedAt).getTime()
       const now = Date.now()
-      const daysPassed = Math.floor((now - newestPublishedDate) / (1000 * 60 * 60 * 24))
+      const daysPassed = Math.floor((now - firstPublishedDate) / (1000 * 60 * 60 * 24))
 
-      // Start from the newest post and work backwards
-      const currentPostIndex = publishedPosts.length - 1 - daysPassed
-
-      // If we've gone past all posts, return empty array (triggers "no guidance" message)
-      if (currentPostIndex < 0) {
-        return NextResponse.json([])
-      }
+      // Cycle through posts: day 0 = post 0, day 1 = post 1, etc.
+      const currentPostIndex = daysPassed % publishedPosts.length
 
       const currentPost = publishedPosts[currentPostIndex]
       return NextResponse.json([currentPost])

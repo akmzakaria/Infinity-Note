@@ -10,6 +10,7 @@ export interface IPost {
   publishedAt: Date
   isPublished: boolean
   isCurrentlyLive: boolean
+  manuallyLiveAt?: Date
 }
 
 const PostSchema = new mongoose.Schema(
