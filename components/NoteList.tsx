@@ -75,8 +75,8 @@ export default function NoteList({
     return true
   }
 
-  // Show loading spinner when loading or when notes don't match the category type
-  if (loading || !notesMatchCategory()) {
+  // Show loading spinner only when notes don't match the category type (not when just loading with valid cache)
+  if (!notesMatchCategory()) {
     return (
       <div
         className="flex flex-1 items-center justify-center p-12"
@@ -108,6 +108,11 @@ export default function NoteList({
         style={{ backgroundColor: '#0c1327' }}
       >
         <div className="mx-auto w-full max-w-4xl">
+          <div className="mb-6 text-center">
+            <p className="text-sm text-slate-400 md:text-base">
+              A new guidance will appear every 24 hours
+            </p>
+          </div>
           <div className="rounded-2xl border border-slate-800/60 bg-slate-900/80 p-6 shadow-lg shadow-black/40 md:p-8">
             <div className="prose prose-invert max-w-none">
               <div className="whitespace-pre-wrap text-base leading-relaxed text-slate-100 md:text-lg">
