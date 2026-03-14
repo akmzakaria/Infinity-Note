@@ -135,68 +135,81 @@ export default function NoteList({
         }`}
         style={{ backgroundColor: '#0c1327' }}
       >
-        {notes.map((note) => (
-          <div
-            key={note._id}
-            className="group relative cursor-pointer rounded-2xl border border-slate-800/60 bg-slate-900/80 p-5 shadow-sm shadow-black/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg md:p-6"
-          >
-            <Link
-              href={`/note/${note._id}?from=${encodeURIComponent(currentCategory)}`}
-              className="block text-inherit no-underline"
-              prefetch={true}
+        {notes.map((note) => {
+          const post = note as any
+          return (
+            <div
+              key={note._id}
+              className="group relative cursor-pointer rounded-2xl border border-slate-800/60 bg-slate-900/80 p-5 shadow-sm shadow-black/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg md:p-6"
             >
-              {isManagePostsCategory ? (
-                <>
-                  <div className="mb-3 flex items-center gap-2 text-xs text-slate-400">
-                    <span>{formatDate(note.createdAt)}</span>
-                    <span>•</span>
-                    <span>{formatTime(note.createdAt)}</span>
-                  </div>
-                  <p className="m-0 text-base leading-relaxed text-slate-300">
-                    {truncateContent(note.content)}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="mb-3 flex items-start justify-between gap-4">
-                    <h3 className="m-0 flex-1 text-xl font-semibold text-slate-50">
-                      {note.title || 'Untitled'}
-                    </h3>
-                    <div className="flex shrink-0 flex-col items-end gap-1">
-                      <span className="text-sm font-medium text-slate-300">
-                        {formatTime(note.updatedAt)}
-                      </span>
-                      <span className="text-xs text-slate-500">{formatDate(note.updatedAt)}</span>
-                    </div>
-                  </div>
-                  <p className="m-0 text-base leading-relaxed text-slate-300">
-                    {truncateContent(note.content)}
-                  </p>
-                </>
+              {/* Currently Active Indicator */}
+              {isManagePostsCategory && post.currentlyActive && (
+                <div
+                  className="absolute right-3 top-3 flex items-center gap-2 rounded-full bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400"
+                  title="Currently shown to viewers"
+                >
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-green-400"></div>
+                  <span>Live</span>
+                </div>
               )}
-            </Link>
-            <button
-              className="absolute bottom-4 right-4 flex h-9 w-9 items-center justify-center rounded-md text-slate-500 opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 md:bottom-5 md:right-5"
-              onClick={(e) => {
-                e.preventDefault()
-                setPendingNoteId(note._id)
-              }}
-              aria-label="Delete note"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+              <Link
+                href={`/note/${note._id}?from=${encodeURIComponent(currentCategory)}`}
+                className="block text-inherit no-underline"
+                prefetch={true}
               >
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              </svg>
-            </button>
-          </div>
-        ))}
+                {isManagePostsCategory ? (
+                  <>
+                    <div className="mb-3 flex items-center gap-2 text-xs text-slate-400">
+                      <span>{formatDate(note.createdAt)}</span>
+                      <span>•</span>
+                      <span>{formatTime(note.createdAt)}</span>
+                    </div>
+                    <p className="m-0 text-base leading-relaxed text-slate-300">
+                      {truncateContent(note.content)}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="mb-3 flex items-start justify-between gap-4">
+                      <h3 className="m-0 flex-1 text-xl font-semibold text-slate-50">
+                        {note.title || 'Untitled'}
+                      </h3>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <span className="text-sm font-medium text-slate-300">
+                          {formatTime(note.updatedAt)}
+                        </span>
+                        <span className="text-xs text-slate-500">{formatDate(note.updatedAt)}</span>
+                      </div>
+                    </div>
+                    <p className="m-0 text-base leading-relaxed text-slate-300">
+                      {truncateContent(note.content)}
+                    </p>
+                  </>
+                )}
+              </Link>
+              <button
+                className="absolute bottom-4 right-4 flex h-9 w-9 items-center justify-center rounded-md text-slate-500 opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 md:bottom-5 md:right-5"
+                onClick={(e) => {
+                  e.preventDefault()
+                  setPendingNoteId(note._id)
+                }}
+                aria-label="Delete note"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
+          )
+        })}
       </div>
       {pendingNoteId && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 px-4">
