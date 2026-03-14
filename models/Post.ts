@@ -9,6 +9,7 @@ export interface IPost {
   updatedAt: Date
   publishedAt: Date
   isPublished: boolean
+  isCurrentlyLive: boolean
 }
 
 const PostSchema = new mongoose.Schema(
@@ -31,6 +32,10 @@ const PostSchema = new mongoose.Schema(
       default: null,
     },
     isPublished: {
+      type: Boolean,
+      default: false,
+    },
+    isCurrentlyLive: {
       type: Boolean,
       default: false,
     },

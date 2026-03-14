@@ -28,15 +28,23 @@ export async function GET(request: NextRequest) {
       let currentlyActivePostId = null
 
       if (publishedPosts.length > 0) {
-        const newestPublishedDate = new Date(
-          publishedPosts[publishedPosts.length - 1].publishedAt
-        ).getTime()
-        const now = Date.now()
-        const daysPassed = Math.floor((now - newestPublishedDate) / (1000 * 60 * 60 * 24))
-        const currentPostIndex = publishedPosts.length - 1 - daysPassed
+        // First check if any post is manually set as live
+        const manuallyLivePost = publishedPosts.find((post) => post.isCurrentlyLive)
 
-        if (currentPostIndex >= 0) {
-          currentlyActivePostId = publishedPosts[currentPostIndex]._id.toString()
+        if (manuallyLivePost) {
+          currentlyActivePostId = manuallyLivePost._id.toString()
+        } else {
+          // Fall back to automatic rotation
+          const newestPublishedDate = new Date(
+            publishedPosts[publishedPosts.length - 1].publishedAt
+          ).getTime()
+          const now = Date.now()
+          const daysPassed = Math.floor((now - newestPublishedDate) / (1000 * 60 * 60 * 24))
+          const currentPostIndex = publishedPosts.length - 1 - daysPassed
+
+          if (currentPostIndex >= 0) {
+            currentlyActivePostId = publishedPosts[currentPostIndex]._id.toString()
+          }
         }
       }
 
@@ -59,21 +67,29 @@ export async function GET(request: NextRequest) {
         return NextResponse.json([])
       }
 
-      // Calculate which post should be shown based on 24-hour rotation
-      // Use the NEWEST post as reference point so new posts appear immediately
+      // First check if any post is manually set as live
+      const manuallyLivePost = publishedPosts.find((post) => post.isCurrentlyLive)
+
+      if (manuallyLivePost) {
+        return NextResponse.json([manuallyLivePost])
+      }
+
+      // Fall back to automatic rotation
       const newestPublishedDate = new Date(
         publishedPosts[publishedPosts.length - 1].publishedAt
       ).getTime()
       const now = Date.now()
-      const hoursPassed = Math.floor((now - newestPublishedDate) / (1000 * 60 * 60 * 24))
+      const daysPassed = Math.floor((now - newestPublishedDate) / (1000 * 60 * 60 * 24))
 
-      // Start from the newest post (last index) and work backwards
-      const currentPostIndex = (publishedPosts.length - 1 - hoursPassed) % publishedPosts.length
-      // Handle negative modulo
-      const finalIndex =
-        currentPostIndex < 0 ? publishedPosts.length + currentPostIndex : currentPostIndex
+      // Start from the newest post and work backwards
+      const currentPostIndex = publishedPosts.length - 1 - daysPassed
 
-      const currentPost = publishedPosts[finalIndex]
+      // If we've gone past all posts, return empty array (triggers "no guidance" message)
+      if (currentPostIndex < 0) {
+        return NextResponse.json([])
+      }
+
+      const currentPost = publishedPosts[currentPostIndex]
       return NextResponse.json([currentPost])
     } else {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })

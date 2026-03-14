@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useToast } from './ToastProvider'
 
 interface Note {
@@ -19,6 +19,7 @@ interface NoteListProps {
   onDelete: (id: string) => void
   searchQuery?: string
   currentCategory?: string
+  onRefresh?: () => void
 }
 
 export default function NoteList({
@@ -27,11 +28,25 @@ export default function NoteList({
   onDelete,
   searchQuery = '',
   currentCategory = 'All',
+  onRefresh,
 }: NoteListProps) {
   const { showToast } = useToast()
   const [pendingNoteId, setPendingNoteId] = useState<string | null>(null)
+  const [localActivePostId, setLocalActivePostId] = useState<string | null>(null)
   const isViewerPostsCategory = currentCategory === "Today's Guidance"
   const isManagePostsCategory = currentCategory === 'Manage Posts'
+
+  // Initialize liked state from post data - must be at top level
+  useEffect(() => {
+    // Clear local state when switching categories or when server state matches local state
+    if (isManagePostsCategory && notes.length > 0) {
+      const serverActivePost = notes.find((note) => (note as any).currentlyActive)
+      if (serverActivePost && localActivePostId === serverActivePost._id) {
+        // Server state matches local state, clear local override
+        setLocalActivePostId(null)
+      }
+    }
+  }, [isManagePostsCategory, notes, localActivePostId])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -137,13 +152,18 @@ export default function NoteList({
       >
         {notes.map((note) => {
           const post = note as any
+          // Use local state for instant feedback, fallback to server state
+          const isCurrentlyActive = localActivePostId
+            ? note._id === localActivePostId
+            : post.currentlyActive
+
           return (
             <div
               key={note._id}
               className="group relative cursor-pointer rounded-2xl border border-slate-800/60 bg-slate-900/80 p-5 shadow-sm shadow-black/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg md:p-6"
             >
               {/* Currently Active Indicator */}
-              {isManagePostsCategory && post.currentlyActive && (
+              {isManagePostsCategory && isCurrentlyActive && (
                 <div
                   className="absolute right-3 top-3 flex items-center gap-2 rounded-full bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400"
                   title="Currently shown to viewers"
@@ -152,6 +172,7 @@ export default function NoteList({
                   <span>Live</span>
                 </div>
               )}
+
               <Link
                 href={`/note/${note._id}?from=${encodeURIComponent(currentCategory)}`}
                 className="block text-inherit no-underline"
@@ -159,10 +180,79 @@ export default function NoteList({
               >
                 {isManagePostsCategory ? (
                   <>
-                    <div className="mb-3 flex items-center gap-2 text-xs text-slate-400">
-                      <span>{formatDate(note.createdAt)}</span>
-                      <span>•</span>
-                      <span>{formatTime(note.createdAt)}</span>
+                    <div className="mb-3 flex items-center justify-between gap-2 text-xs text-slate-400">
+                      <div className="flex items-center gap-2">
+                        <span>{formatDate(note.createdAt)}</span>
+                        <span>•</span>
+                        <span>{formatTime(note.createdAt)}</span>
+                      </div>
+                      {/* Make Live Button - inline with date */}
+                      {!isCurrentlyActive && (
+                        <button
+                          className="flex h-6 w-6 items-center justify-center rounded bg-blue-500/20 text-blue-400 transition-all hover:bg-blue-500/30"
+                          onClick={async (e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+
+                            console.log('Make live clicked for post:', note._id)
+                            console.log('Setting localActivePostId to:', note._id)
+
+                            // Instantly show "Live" indicator for feedback
+                            setLocalActivePostId(note._id)
+
+                            try {
+                              const { authenticatedFetch } = await import('@/lib/api')
+                              const res = await authenticatedFetch(
+                                `/api/posts/${note._id}/make-live`,
+                                {
+                                  method: 'POST',
+                                }
+                              )
+                              if (res.ok) {
+                                console.log('Make live API success')
+                                showToast({
+                                  variant: 'success',
+                                  title: 'Post is now live',
+                                })
+                                // Don't refresh immediately - let the server state persist
+                                // The local state will show "Live" and server will confirm it
+                                if (onRefresh) {
+                                  onRefresh()
+                                }
+                                // Don't clear local state - let server state take over
+                              } else {
+                                console.log('Make live API failed')
+                                showToast({
+                                  variant: 'error',
+                                  title: 'Failed to make post live',
+                                })
+                                // Revert immediately on error
+                                setLocalActivePostId(null)
+                              }
+                            } catch (error) {
+                              console.error('Error making post live:', error)
+                              showToast({
+                                variant: 'error',
+                                title: 'Failed to make post live',
+                              })
+                              // Revert immediately on error
+                              setLocalActivePostId(null)
+                            }
+                          }}
+                          title="Make this post live"
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                          </svg>
+                        </button>
+                      )}
                     </div>
                     <p className="m-0 text-base leading-relaxed text-slate-300">
                       {truncateContent(note.content)}
