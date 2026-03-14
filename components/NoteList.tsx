@@ -138,7 +138,7 @@ export default function NoteList({
         {notes.map((note) => (
           <div
             key={note._id}
-            className="group relative cursor-pointer rounded-2xl border border-slate-800/60 bg-slate-900/80 p-5 shadow-sm shadow-black/40 transition-transform transition-shadow duration-200 hover:-translate-y-0.5 hover:shadow-lg md:p-6"
+            className="group relative cursor-pointer rounded-2xl border border-slate-800/60 bg-slate-900/80 p-5 shadow-sm shadow-black/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg md:p-6"
           >
             <Link
               href={`/note/${note._id}?from=${encodeURIComponent(currentCategory)}`}
@@ -148,9 +148,9 @@ export default function NoteList({
               {isManagePostsCategory ? (
                 <>
                   <div className="mb-3 flex items-center gap-2 text-xs text-slate-400">
-                    <span>{formatDate(note.updatedAt)}</span>
+                    <span>{formatDate(note.createdAt)}</span>
                     <span>•</span>
-                    <span>{formatTime(note.updatedAt)}</span>
+                    <span>{formatTime(note.createdAt)}</span>
                   </div>
                   <p className="m-0 text-base leading-relaxed text-slate-300">
                     {truncateContent(note.content)}

@@ -70,20 +70,30 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Update fields
-    if (title !== undefined) post.title = title
-    if (content !== undefined) post.content = content
+    // Prepare update object
+    const updateData: any = {}
+
+    if (title !== undefined) updateData.title = title
+    if (content !== undefined) updateData.content = content
     if (isPublished !== undefined) {
-      post.isPublished = isPublished
+      updateData.isPublished = isPublished
       // Set publishedAt when first published
       if (isPublished && !post.publishedAt) {
-        post.publishedAt = new Date()
+        updateData.publishedAt = new Date()
       }
     }
 
-    await post.save()
+    // Update without changing timestamps
+    const updatedPost = await Post.findByIdAndUpdate(
+      params.id,
+      { $set: updateData },
+      {
+        new: true, // Return the updated document
+        timestamps: false, // Don't update timestamps
+      }
+    )
 
-    return NextResponse.json(post)
+    return NextResponse.json(updatedPost)
   } catch (error) {
     console.error('Error updating post:', error)
     return NextResponse.json({ error: 'Failed to update post' }, { status: 500 })
