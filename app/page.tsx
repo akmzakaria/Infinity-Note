@@ -105,34 +105,61 @@ function HomeContent() {
       const categoryFromUrl = searchParams.get('category')
       if (!categoryFromUrl) return
 
-      // Load from cache first for instant display
-      const cachedNotes = getNotesByCategory(categoryFromUrl)
-      if (cachedNotes) {
-        setNotes(cachedNotes)
+      // Check if this is a posts category
+      const isPostsCategory =
+        categoryFromUrl === 'Manage Posts' || categoryFromUrl === "Today's Guidance"
+
+      // Don't load cache for posts categories to avoid showing notes
+      // Also clear notes array immediately for posts categories
+      if (isPostsCategory) {
+        setNotes([])
+      } else {
+        // Load from cache first for instant display (only for notes categories)
+        const cachedNotes = getNotesByCategory(categoryFromUrl)
+        if (cachedNotes) {
+          setNotes(cachedNotes)
+        }
       }
 
       setLoading(true)
 
       try {
         if (user) {
-          // User is logged in - fetch from server
-          const url =
-            categoryFromUrl === 'All'
-              ? '/api/notes'
-              : `/api/notes?category=${encodeURIComponent(categoryFromUrl)}`
-          const res = await authenticatedFetch(url, { signal: controller.signal })
+          if (isPostsCategory) {
+            // Fetch posts instead of notes
+            const res = await authenticatedFetch('/api/posts', { signal: controller.signal })
 
-          if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`)
-          }
+            if (!res.ok) {
+              throw new Error(`HTTP error! status: ${res.status}`)
+            }
 
-          const data = await res.json()
-          if (fetchSeq.current === currentSeq) {
-            setNotes(data)
-            // Cache all notes
-            data.forEach((note: Note) => setNoteInCache(note))
-            // Cache notes by category
-            setNotesByCategory(categoryFromUrl, data)
+            const data = await res.json()
+            if (fetchSeq.current === currentSeq) {
+              setNotes(data)
+              // Cache posts
+              data.forEach((post: Note) => setNoteInCache(post))
+              setNotesByCategory(categoryFromUrl, data)
+            }
+          } else {
+            // User is logged in - fetch notes from server
+            const url =
+              categoryFromUrl === 'All'
+                ? '/api/notes'
+                : `/api/notes?category=${encodeURIComponent(categoryFromUrl)}`
+            const res = await authenticatedFetch(url, { signal: controller.signal })
+
+            if (!res.ok) {
+              throw new Error(`HTTP error! status: ${res.status}`)
+            }
+
+            const data = await res.json()
+            if (fetchSeq.current === currentSeq) {
+              setNotes(data)
+              // Cache all notes
+              data.forEach((note: Note) => setNoteInCache(note))
+              // Cache notes by category
+              setNotesByCategory(categoryFromUrl, data)
+            }
           }
         } else {
           // User is offline - use localStorage
@@ -210,6 +237,14 @@ function HomeContent() {
     setNotesByCategory,
   ])
 
+  // Update selectedCategory when URL changes
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get('category')
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl)
+    }
+  }, [searchParams])
+
   // Load categories
   useEffect(() => {
     const loadCategories = async () => {
@@ -240,14 +275,6 @@ function HomeContent() {
       setShowSyncPrompt(true)
     }
   }, [user])
-
-  useEffect(() => {
-    if (categoriesLoading) return
-    const fromQuery = searchParams.get('category')
-    if (fromQuery && categories.includes(fromQuery)) {
-      setSelectedCategory(fromQuery)
-    }
-  }, [searchParams, categories, categoriesLoading])
 
   // Handle click outside profile dropdown
   useEffect(() => {
@@ -366,8 +393,13 @@ function HomeContent() {
   const handleDeleteNote = async (id: string) => {
     try {
       if (user) {
+        // Check if we're in a posts category
+        const isPostsCategory =
+          selectedCategory === 'Manage Posts' || selectedCategory === "Today's Guidance"
+
         // Online mode
-        const res = await authenticatedFetch(`/api/notes/${id}`, { method: 'DELETE' })
+        const endpoint = isPostsCategory ? `/api/posts/${id}` : `/api/notes/${id}`
+        const res = await authenticatedFetch(endpoint, { method: 'DELETE' })
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`)
         }
@@ -548,23 +580,25 @@ function HomeContent() {
           currentCategory={selectedCategory}
         />
 
-        <Link
-          href={`/new?category=${encodeURIComponent(selectedCategory)}`}
-          className="fixed bottom-8 right-6 z-[100] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-blue-500 via-sky-400 to-emerald-400 text-white shadow-lg shadow-blue-500/40 transition-transform hover:scale-110 hover:shadow-xl hover:shadow-emerald-400/40 md:bottom-16 md:right-[100px]"
-          prefetch={true}
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
+        {selectedCategory !== "Today's Guidance" && (
+          <Link
+            href={`/new?category=${encodeURIComponent(selectedCategory)}`}
+            className="fixed bottom-8 right-6 z-[100] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-blue-500 via-sky-400 to-emerald-400 text-white shadow-lg shadow-blue-500/40 transition-transform hover:scale-110 hover:shadow-xl hover:shadow-emerald-400/40 md:bottom-16 md:right-[100px]"
+            prefetch={true}
           >
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-        </Link>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </Link>
+        )}
       </main>
 
       {sidebarOpen && (

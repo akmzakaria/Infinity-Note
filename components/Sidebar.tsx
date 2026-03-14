@@ -2,7 +2,11 @@
 
 import { useMemo, useState } from 'react'
 import { useToast } from './ToastProvider'
+import { useAuth } from './AuthProvider'
 import Logo from './Logo'
+
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || process.env.ADMIN_EMAIL || ''
+const VIEWER_EMAIL = process.env.NEXT_PUBLIC_VIEWER_EMAIL || process.env.VIEWER_EMAIL || ''
 
 interface SidebarProps {
   isOpen: boolean
@@ -25,7 +29,28 @@ export default function Sidebar({
   const [newCategoryName, setNewCategoryName] = useState('')
   const [pendingCategory, setPendingCategory] = useState<string | null>(null)
   const { showToast } = useToast()
+  const { user } = useAuth()
   const deletableCategories = useMemo(() => categories.filter((c) => c !== 'All'), [categories])
+
+  // Check if user is admin or viewer
+  const isAdmin = user?.email === ADMIN_EMAIL
+  const isViewer = user?.email === VIEWER_EMAIL
+
+  // Add special categories based on user role
+  const displayCategories = useMemo(() => {
+    const allIndex = categories.indexOf('All')
+    const newCategories = [...categories]
+
+    if (isAdmin && !categories.includes('Manage Posts')) {
+      newCategories.splice(allIndex + 1, 0, 'Manage Posts')
+    }
+
+    if (isViewer && !categories.includes("Today's Guidance")) {
+      newCategories.splice(allIndex + 1, 0, "Today's Guidance")
+    }
+
+    return newCategories
+  }, [categories, isAdmin, isViewer])
 
   const handleCategoryClick = (category: string) => {
     onCategorySelect(category)
@@ -72,7 +97,7 @@ export default function Sidebar({
             <div className="h-px bg-slate-800/80" />
 
             <nav className="mt-3 flex flex-col gap-1">
-              {categories.map((category) => (
+              {displayCategories.map((category) => (
                 <div key={category} className="flex items-center gap-1">
                   <button
                     className={[
@@ -86,26 +111,29 @@ export default function Sidebar({
                     {category}
                   </button>
 
-                  {category !== 'All' && deletableCategories.length > 0 && (
-                    <button
-                      className="flex h-9 w-9 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
-                      onClick={() => handleDeleteCategory(category)}
-                      aria-label={`Delete category ${category}`}
-                      title="Delete category"
-                    >
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
+                  {category !== 'All' &&
+                    category !== 'Manage Posts' &&
+                    category !== "Today's Guidance" &&
+                    deletableCategories.length > 0 && (
+                      <button
+                        className="flex h-9 w-9 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                        onClick={() => handleDeleteCategory(category)}
+                        aria-label={`Delete category ${category}`}
+                        title="Delete category"
                       >
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                      </svg>
-                    </button>
-                  )}
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                      </button>
+                    )}
                 </div>
               ))}
             </nav>

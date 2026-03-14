@@ -29,6 +29,13 @@ function NewNoteContent() {
   const [saving, setSaving] = useState(false)
   const [noteId, setNoteId] = useState<string | null>(null)
   const [isOffline, setIsOffline] = useState(false)
+  // Check both state and URL to avoid flash
+  const categoryFromUrl = searchParams.get('category') || 'All'
+  const isPostCategory =
+    category === 'Manage Posts' ||
+    category === "Today's Guidance" ||
+    categoryFromUrl === 'Manage Posts' ||
+    categoryFromUrl === "Today's Guidance"
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const categoryDropdownRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef(title)
@@ -67,6 +74,16 @@ function NewNoteContent() {
         if (user) {
           // User is logged in - fetch from server
           const userCategories = await fetchCategories()
+
+          // Add "Manage Posts" for admin users
+          if (
+            user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+            user.email === process.env.ADMIN_EMAIL
+          ) {
+            const allIndex = userCategories.indexOf('All')
+            userCategories.splice(allIndex + 1, 0, 'Manage Posts')
+          }
+
           setCategories(userCategories)
           loadedCategories = userCategories
         } else {
@@ -100,23 +117,28 @@ function NewNoteContent() {
     if (!title.trim() && !content.trim()) return null
 
     try {
-      const res = await authenticatedFetch('/api/notes', {
+      // Check if this is a post (Manage Posts category)
+      const isPost = category === 'Manage Posts'
+      const endpoint = isPost ? '/api/posts' : '/api/notes'
+
+      const res = await authenticatedFetch(endpoint, {
         method: 'POST',
         body: JSON.stringify({
           title: title.trim() || 'Untitled',
           content: content.trim(),
-          category,
+          category: isPost ? undefined : category,
+          isPublished: isPost ? true : undefined,
         }),
       })
 
       if (res.ok) {
-        const note = await res.json()
-        return note._id
+        const item = await res.json()
+        return item._id
       } else {
-        throw new Error('Failed to create note')
+        throw new Error(`Failed to create ${isPost ? 'post' : 'note'}`)
       }
     } catch (error) {
-      console.error('Error creating note:', error)
+      console.error(`Error creating ${category === 'Manage Posts' ? 'post' : 'note'}:`, error)
       return null
     }
   }, [title, content, category])
@@ -124,20 +146,26 @@ function NewNoteContent() {
   const updateNoteOnline = useCallback(
     async (id: string) => {
       try {
-        const res = await authenticatedFetch(`/api/notes/${id}`, {
-          method: 'PUT',
+        // Check if this is a post
+        const isPost = category === 'Manage Posts'
+        const endpoint = isPost ? `/api/posts/${id}` : `/api/notes/${id}`
+        const method = isPost ? 'PATCH' : 'PUT'
+
+        const res = await authenticatedFetch(endpoint, {
+          method,
           body: JSON.stringify({
             title: title.trim() || 'Untitled',
             content: content.trim(),
-            category,
+            category: isPost ? undefined : category,
+            isPublished: isPost ? true : undefined,
           }),
         })
 
         if (!res.ok) {
-          throw new Error('Failed to update note')
+          throw new Error(`Failed to update ${isPost ? 'post' : 'note'}`)
         }
       } catch (error) {
-        console.error('Error updating note:', error)
+        console.error(`Error updating ${category === 'Manage Posts' ? 'post' : 'note'}:`, error)
       }
     },
     [title, content, category]
@@ -242,79 +270,81 @@ function NewNoteContent() {
       className={`min-h-dvh bg-gradient-to-b from-slate-950/60 via-slate-950 to-slate-950 md:flex md:items-center md:justify-center md:p-8 ${isCapacitor ? 'mt-5' : 'md:mt-0'}`}
     >
       <div className="flex min-h-dvh w-full flex-col bg-slate-900/80 backdrop-blur md:min-h-[700px] md:max-w-[900px] md:rounded-xl md:shadow-xl md:shadow-black/40 md:ring-1 md:ring-slate-800/70">
-        <div className="border-b border-slate-800/70 px-4 py-4 md:p-6">
-          <div className="flex items-center justify-between gap-3 md:gap-4">
-            <input
-              type="text"
-              placeholder="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="min-w-0 flex-1 bg-transparent text-2xl font-semibold text-slate-50 outline-none placeholder:font-normal placeholder:text-slate-400"
-            />
+        {!isPostCategory && (
+          <div className="border-b border-slate-800/70 px-4 py-4 md:p-6">
+            <div className="flex items-center justify-between gap-3 md:gap-4">
+              <input
+                type="text"
+                placeholder="Title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="min-w-0 flex-1 bg-transparent text-2xl font-semibold text-slate-50 outline-none placeholder:font-normal placeholder:text-slate-400"
+              />
 
-            <div className="flex shrink-0 items-center gap-3">
-              {saving && (
-                <div className="flex items-center gap-2 text-sm text-slate-400">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-slate-400"></div>
-                  <span className="hidden md:inline">Saving...</span>
-                </div>
-              )}
-
-              <div className="relative" ref={categoryDropdownRef}>
-                <button
-                  className="whitespace-nowrap rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-700 hover:text-slate-50 md:px-4"
-                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                >
-                  <span className="hidden md:inline">Category: </span>
-                  {category}
-                </button>
-                {showCategoryDropdown && (
-                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[100] min-w-[180px] overflow-hidden rounded-md border border-slate-700 bg-slate-900 shadow-xl shadow-black/60">
-                    {categories.map((cat) => (
-                      <button
-                        key={cat}
-                        className={[
-                          'w-full border-b border-slate-800 px-4 py-3 text-left text-sm transition-colors last:border-b-0 hover:bg-slate-800',
-                          category === cat
-                            ? 'bg-sky-500/20 font-semibold text-sky-300'
-                            : 'text-slate-300',
-                        ].join(' ')}
-                        onClick={() => {
-                          setCategory(cat)
-                          setShowCategoryDropdown(false)
-                        }}
-                      >
-                        {cat}
-                      </button>
-                    ))}
+              <div className="flex shrink-0 items-center gap-3">
+                {saving && (
+                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-slate-400"></div>
+                    <span className="hidden md:inline">Saving...</span>
                   </div>
                 )}
-              </div>
 
-              <button
-                className="flex h-10 w-10 items-center justify-center rounded-full text-slate-100 transition-colors hover:bg-slate-800"
-                onClick={async () => {
-                  // Force save the note
-                  await debouncedSave()
-                  // Navigate back to the current category
-                  router.push(`/?category=${encodeURIComponent(category)}`)
-                }}
-                title="Save and go back"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
+                <div className="relative" ref={categoryDropdownRef}>
+                  <button
+                    className="whitespace-nowrap rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-700 hover:text-slate-50 md:px-4"
+                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                  >
+                    <span className="hidden md:inline">Category: </span>
+                    {category}
+                  </button>
+                  {showCategoryDropdown && (
+                    <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[100] min-w-[180px] overflow-hidden rounded-md border border-slate-700 bg-slate-900 shadow-xl shadow-black/60">
+                      {categories.map((cat) => (
+                        <button
+                          key={cat}
+                          className={[
+                            'w-full border-b border-slate-800 px-4 py-3 text-left text-sm transition-colors last:border-b-0 hover:bg-slate-800',
+                            category === cat
+                              ? 'bg-sky-500/20 font-semibold text-sky-300'
+                              : 'text-slate-300',
+                          ].join(' ')}
+                          onClick={() => {
+                            setCategory(cat)
+                            setShowCategoryDropdown(false)
+                          }}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  className="flex h-10 w-10 items-center justify-center rounded-full text-slate-100 transition-colors hover:bg-slate-800"
+                  onClick={async () => {
+                    // Force save the note
+                    await debouncedSave()
+                    // Navigate back to the current category
+                    router.push(`/?category=${encodeURIComponent(category)}`)
+                  }}
+                  title="Save and go back"
                 >
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-              </button>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <textarea
           placeholder="Start writing..."

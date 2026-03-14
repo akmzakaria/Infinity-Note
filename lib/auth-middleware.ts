@@ -22,3 +22,25 @@ export async function getAuthenticatedUser(request: NextRequest) {
     throw new Error('Unauthorized')
   }
 }
+
+export async function verifyAuth(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get('authorization')
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return { authenticated: false, email: null, uid: null }
+    }
+
+    const idToken = authHeader.split('Bearer ')[1]
+    const decodedToken = await verifyIdToken(idToken)
+
+    return {
+      authenticated: true,
+      email: decodedToken.email || null,
+      uid: decodedToken.uid,
+    }
+  } catch (error) {
+    console.error('Authentication error:', error)
+    return { authenticated: false, email: null, uid: null }
+  }
+}
