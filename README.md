@@ -2,6 +2,8 @@
 
 A modern note-taking web application built with Next.js and MongoDB.
 
+Live link: https://infinity-note.vercel.app
+
 ## Features
 
 - 📝 Create, edit, and delete notes
@@ -75,7 +77,3 @@ npm run dev
 - TypeScript
 - MongoDB with Mongoose
 - CSS Modules
-
-## License
-
-MIT
