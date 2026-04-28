@@ -25,7 +25,7 @@ echo 1. In Android Studio, click 'Build ^> Build Bundle(s) / APK(s) ^> Build APK
 echo 2. Wait for build to complete
 echo 3. Find your APK in android/app/build/outputs/apk/debug/
 echo.
-echo For more details, see ANDROID_BUILD.md
+echo
 echo.
 
 call npx cap open android
