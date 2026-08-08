@@ -1,0 +1,20 @@
+<!-- OG Image Placeholder -->
+<!-- Replace this file with an actual 1200x630px screenshot of your app -->
+<!-- For now, create a simple branded image using an online tool like Canva -->
+
+Instructions to create OG image:
+1. Take a screenshot of your Infinity Note dashboard
+2. Resize to 1200x630 pixels
+3. Add your logo and tagline
+4. Save as og-image.png in the /public folder
+
+Recommended tools:
+- Canva (https://canva.com)
+- Figma (https://figma.com)
+- Adobe Express (https://www.adobe.com/express/)
+
+Image should include:
+- App name: "Infinity Note"
+- Tagline: "Free Online Note Taking App"
+- Clean screenshot showing the interface
+- Your brand colors (#1D4ED8 - blue theme)
