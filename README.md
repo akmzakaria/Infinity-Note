@@ -22,6 +22,7 @@ A modern note-taking web application built with Next.js and MongoDB.
 1. Clone the repository or navigate to the project directory
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
@@ -29,11 +30,13 @@ npm install
 3. Set up environment variables:
    - Copy `.env.local.example` to `.env.local`
    - Add your MongoDB connection string:
+
    ```
    MONGODB_URI=your_mongodb_connection_string_here
    ```
 
 4. Run the development server:
+
 ```bash
 npm run dev
 ```
@@ -76,4 +79,3 @@ npm run dev
 ## License
 
 MIT
-
