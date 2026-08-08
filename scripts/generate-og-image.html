@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate OG Image for Infinity Note</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            background: #0c1327;
+            color: white;
+        }
+        #canvas {
+            border: 2px solid #1D4ED8;
+            display: block;
+            margin: 20px 0;
+        }
+        button {
+            background: #1D4ED8;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #1e40af;
+        }
+        .instructions {
+            background: rgba(29, 78, 216, 0.1);
+            border-left: 4px solid #1D4ED8;
+            padding: 16px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Generate OG Image for Infinity Note</h1>
+    
+    <div class="instructions">
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Click "Generate OG Image" below</li>
+            <li>Right-click on the image and "Save as..."</li>
+            <li>Save it as <code>og-image.png</code> in the <code>public/</code> folder</li>
+            <li>Replace the existing placeholder file</li>
+        </ol>
+    </div>
+
+    <button onclick="generateOGImage()">Generate OG Image (1200x630)</button>
+    <button onclick="downloadImage()">Download Image</button>
+    
+    <br><br>
+    <canvas id="canvas" width="1200" height="630"></canvas>
+
+    <script>
+        function generateOGImage() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 1200, 630);
+            gradient.addColorStop(0, '#0c1327');
+            gradient.addColorStop(1, '#1e293b');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 1200, 630);
+            
+            // Decorative circles
+            ctx.fillStyle = 'rgba(29, 78, 216, 0.1)';
+            ctx.beginPath();
+            ctx.arc(1000, 100, 200, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.08)';
+            ctx.beginPath();
+            ctx.arc(200, 500, 250, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // App name
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 90px system-ui, -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Infinity Note', 600, 220);
+            
+            // Infinity symbol
+            ctx.fillStyle = '#3B82F6';
+            ctx.font = 'bold 100px Arial';
+            ctx.fillText('∞', 600, 340);
+            
+            // Tagline
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '40px system-ui, -apple-system, sans-serif';
+            ctx.fillText('Free Online Note Taking App', 600, 420);
+            
+            // Features
+            ctx.font = '28px system-ui, -apple-system, sans-serif';
+            ctx.fillStyle = '#cbd5e1';
+            
+            const features = [
+                '✨ Unlimited Notes  |  🏷️ Categories  |  ☁️ Cloud Sync  |  📱 Mobile Friendly'
+            ];
+            
+            ctx.fillText(features[0], 600, 500);
+            
+            // URL
+            ctx.fillStyle = '#1D4ED8';
+            ctx.font = 'bold 32px system-ui, -apple-system, sans-serif';
+            ctx.fillText('infinity-note.vercel.app', 600, 570);
+            
+            // Border
+            ctx.strokeStyle = '#1D4ED8';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(10, 10, 1180, 610);
+            
+            console.log('OG Image generated! Right-click to save.');
+        }
+        
+        function downloadImage() {
+            const canvas = document.getElementById('canvas');
+            const link = document.createElement('a');
+            link.download = 'og-image.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Auto-generate on load
+        window.onload = generateOGImage;
+    </script>
+</body>
+</html>

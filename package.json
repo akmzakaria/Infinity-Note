@@ -11,7 +11,9 @@
     "cap:add": "npx cap add android",
     "cap:sync": "npx cap sync",
     "cap:open": "npx cap open android",
-    "cap:build": "npm run build && npx cap sync && npx cap open android"
+    "cap:build": "npm run build && npx cap sync && npx cap open android",
+    "generate:og-image": "node scripts/generate-og-image.js",
+    "verify:seo": "bash scripts/verify-seo.sh"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
